@@ -1,29 +1,36 @@
-# Azure Terraform Lab – Windows VM Deployment
+# Azure Terraform Lab – Windows VM Deployment with Variables & Managed Disks
 
 ## 📌 Task Description
-Create a **Windows Virtual Machine** in Azure using the following specifications:
+This lab extends the previous **Windows VM deployment** in Azure.  
+The goal is to **replace hardcoded values with variables** and **add managed disks using `for_each`**.  
 
-- **VNet Name:** XXX-App-VNET (replace `XXX` with your initials)  
-- **Subnets:** `dev_subnet` and `tst_subnet`  
-- **VM Name:** XXX-app01vm  
-- **Size:** `Standard_B2s`  
-- **Operating System:** Windows Server 2022  
-- Take a screenshot showing **all created resources** in Azure Portal.  
-- **Important:** Destroy all created resources afterward to save costs.  
+### Requirements:
+- Copy your **previous Windows VM project** and perform all modifications on the copy  
+- Replace all hardcoded values with **variables**  
+- Provide a **list of used variables**  
+- Create **Managed Disks with `for_each`**:
+  - **Name:** taken from variable  
+  - **Location & Resource Group:** taken from data source  
+  - **Storage Account Type:** `Standard_LRS` (locally redundant storage)  
+  - **Create Option:** `Empty`  
+  - **Disk Size:** taken from variable  
+- No need to attach the disks to the VM  
 
 ---
 
 ## 📂 Project Structure
 ```
 .
-├── main.tf         # Main infrastructure definition
+├── main.tf         # Virtual Machine definition
+├── network.tf      # VNet, Subnets, NICs, Managed Disks
 ├── provider.tf     # Terraform provider configuration
 ├── data.tf         # Resource group data source
+├── variables.tf    # Input variables
 └── README.md       # Project documentation
 ```
 
-
 ---
+
 ## 🚀 Deployment Instructions
 1. **Initialize Terraform**  
    ```bash
@@ -35,20 +42,19 @@ Create a **Windows Virtual Machine** in Azure using the following specifications
    terraform plan
    ```
 
-3. **Apply Changes**  
+3. **Apply the Configuration**  
    ```bash
    terraform apply
    ```
 
 4. **Verify in Azure Portal**  
-   - Go to the Azure Portal  
-   - Navigate to your resource group  
-   - Confirm that **VNet, Subnets, NICs, and VM** have been created  
+   - Go to the **Resource Group**  
+   - Confirm that the **VNet, Subnets, NICs, VM, and Managed Disks** have been created  
 
 ---
 
 ## 🧹 Destroy Resources (to save costs)
-Once your screenshot is taken, remove all resources:  
+After completing the task and taking a screenshot:  
 ```bash
 terraform destroy
 ```
