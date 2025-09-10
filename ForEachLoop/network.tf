@@ -52,12 +52,3 @@ resource "azurerm_managed_disk" "loop_managed_disk" {
   disk_size_gb         = each.value.disk_size_gb
   create_option        = each.value.create_option
 }
-
-resource "azurerm_virtual_machine_data_disk_attachment" "attachment_managed_disks" {
-  for_each = azurerm_managed_disk.loop_managed_disk
-  managed_disk_id = each.value.id
-  virtual_machine_id = azurerm_virtual_machine.main.id
-  lun = "1"
-  caching = "ReadWrite"
-  
-}

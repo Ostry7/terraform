@@ -1,6 +1,6 @@
 resource "azurerm_virtual_network" "app_vnet" {
   name                = var.subnets["app"].name
-  address_space       = var.subnets["app"].address_prefixes
+  address_space       = ["10.0.0.0/16"]
   location            = data.azurerm_resource_group.rg_lab.location
   resource_group_name = data.azurerm_resource_group.rg_lab.name
 }
@@ -57,7 +57,7 @@ resource "azurerm_virtual_machine_data_disk_attachment" "attachment_managed_disk
   for_each = azurerm_managed_disk.loop_managed_disk
   managed_disk_id = each.value.id
   virtual_machine_id = azurerm_virtual_machine.main.id
-  lun = "1"
+  lun = index(keys(azurerm_managed_disk.loop_managed_disk), each.key)
   caching = "ReadWrite"
   
 }
