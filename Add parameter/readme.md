@@ -1,8 +1,8 @@
-# Azure Terraform Lab – Windows VM Deployment with Variables & Managed Disks - Attach managed disks
+# Azure Terraform Lab – Windows VM Deployment with Variables & Managed Disks
 
 ## 📌 Task Description
 This lab extends the previous **Windows VM deployment** in Azure.  
-The goal is to **Attach managed disks from previous lab**.  
+The goal is to **replace hardcoded values with variables** and **add managed disks using `for_each`**.  
 
 ### Requirements:
 - Copy your **previous Windows VM project** and perform all modifications on the copy  
