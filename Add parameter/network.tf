@@ -1,63 +1,47 @@
-resource "azurerm_virtual_network" "app_vnet" {
-  name                = var.subnets["app"].name
+resource "azurerm_virtual_network" "my_vnet" {
+  name                = "${local.name_prefix}-vnet"
   address_space       = ["10.0.0.0/16"]
   location            = data.azurerm_resource_group.rg_lab.location
   resource_group_name = data.azurerm_resource_group.rg_lab.name
-}
 
-resource "azurerm_subnet" "dev_subnet" {
-  name                 = var.subnets["dev"].name
+}
+resource "azurerm_subnet" "my_subnets" {
+  for_each = var.subnets
+  name                 = each.value.name
   resource_group_name  = data.azurerm_resource_group.rg_lab.name
-  virtual_network_name = azurerm_virtual_network.app_vnet.name
-  address_prefixes     = var.subnets["dev"].address_prefixes
+  virtual_network_name = azurerm_virtual_network.my_vnet.name
+  address_prefixes     = each.value.address_prefixes
 }
 
-resource "azurerm_subnet" "tst_subnet" {
-  name                 = var.subnets["tst"].name
-  resource_group_name  = data.azurerm_resource_group.rg_lab.name
-  virtual_network_name = azurerm_virtual_network.app_vnet.name
-  address_prefixes     = var.subnets["tst"].address_prefixes
-}
 
-resource "azurerm_network_interface" "dev_nic" {
-  name                = "ostr-dev-nic"
+resource "azurerm_network_interface" "my_nic" {
+  count = var.number_vm
+  name                = "${local.name_prefix}-${format("%02s", count.index + 1)}-nic"
   location            = data.azurerm_resource_group.rg_lab.location
   resource_group_name = data.azurerm_resource_group.rg_lab.name
 
   ip_configuration {
     name                          = "internal-dev"
-    subnet_id                     = azurerm_subnet.dev_subnet.id
+    subnet_id                     = azurerm_subnet.my_subnets["tst"].id
     private_ip_address_allocation = "Dynamic"
   }
 }
 
-resource "azurerm_network_interface" "tst_nic" {
-  name                = "ostr-tst-nic"
-  location            = data.azurerm_resource_group.rg_lab.location
-  resource_group_name = data.azurerm_resource_group.rg_lab.name
 
-  ip_configuration {
-    name                          = "internal-tst"
-    subnet_id                     = azurerm_subnet.tst_subnet.id
-    private_ip_address_allocation = "Dynamic"
-  }
-}
-
-resource "azurerm_managed_disk" "loop_managed_disk" {
-  for_each             = var.managed_disk_entity
-  name                 = each.value.name
+resource "azurerm_managed_disk" "vm_data_disk" {
+  count                = var.number_vm
+  name                 = "${var.appcode}-${var.environment}-${format("%02s", count.index+1)}-datadisk"
   location             = data.azurerm_resource_group.rg_lab.location
   resource_group_name  = data.azurerm_resource_group.rg_lab.name
-  storage_account_type = each.value.storage_account_type
-  disk_size_gb         = each.value.disk_size_gb
-  create_option        = each.value.create_option
+  storage_account_type = "Standard_LRS"
+  disk_size_gb         = 1
+  create_option        = "Empty"
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "attachment_managed_disks" {
-  for_each = azurerm_managed_disk.loop_managed_disk
-  managed_disk_id = each.value.id
-  virtual_machine_id = azurerm_virtual_machine.main.id
-  lun = index(keys(azurerm_managed_disk.loop_managed_disk), each.key)
-  caching = "ReadWrite"
-  
+  count              = var.number_vm
+  managed_disk_id    = azurerm_managed_disk.vm_data_disk[count.index].id
+  virtual_machine_id = azurerm_virtual_machine.main[count.index].id
+  lun                = count.index
+  caching            = "ReadWrite"
 }

@@ -19,11 +19,6 @@ variable "subnets" {
     }
   }
 }
-
-variable "vm_name" {
-  default = "ostr-app01vm"
-}
-
 variable "vm_size" {
   default = "Standard_B2s"
 }
@@ -94,3 +89,18 @@ variable "managed_disk_entity" {
     }
   }
 }
+
+variable "appcode" {
+  default = "OSTR"
+  
+}
+
+variable "number_vm" {
+  default = 3
+  
+}
+
+variable "environment"{
+  default = "dev"
+}
+
