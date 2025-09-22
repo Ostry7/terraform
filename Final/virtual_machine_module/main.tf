@@ -1,0 +1,32 @@
+resource "azurerm_virtual_machine" "my_vm" {
+  count                 = var.number_vm
+  name                  = "${var.appcode}-${var.environment}-${format("%02s", count.index+1)}-vm"
+  location              = data.azurerm_resource_group.rg_lab.location
+  resource_group_name   = data.azurerm_resource_group.rg_lab.name
+  network_interface_ids = [azurerm_network_interface.my_nic[count.index].id]
+  vm_size               = var.vm_size
+
+  storage_image_reference {
+    publisher = var.storage_image_reference.publisher
+    offer     = var.storage_image_reference.offer
+    sku       = var.storage_image_reference.sku
+    version   = var.storage_image_reference.version
+  }
+
+  storage_os_disk {
+    name              = "${var.appcode}-${var.environment}-${format("%02s", count.index+1)}-osdisk"
+    caching           = var.storage_os_disk.caching
+    create_option     = var.storage_os_disk.create_option
+    managed_disk_type = var.storage_os_disk.managed_disk_type
+  }
+
+os_profile {
+  computer_name  = "${var.appcode}-${var.environment}-${format("%02s", count.index+1)}"
+  admin_username = var.user_config.username
+  admin_password = var.user_config.user_password
+}
+
+os_profile_windows_config {
+  provision_vm_agent = true
+}
+}

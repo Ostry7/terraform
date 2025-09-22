@@ -1,24 +1,4 @@
-variable "subnets" {
-  type = map(any)
-  default = {
-    "bastion" = {
-      name             = "AzureBastionSubnet"
-      address_prefixes = ["10.0.1.0/24"]
-    },
-    "dev" = {
-      name             = "ostr-dev-subnet"
-      address_prefixes = ["10.0.2.0/24"]
-    },
-    "tst" = {
-      name             = "ostr-tst-subnet"
-      address_prefixes = ["10.0.3.0/24"]
-    },
-    "app" = {
-      name             = "ostr-app-subnet"
-      address_prefixes = ["10.0.4.0/24"]
-    }
-  }
-}
+
 variable "vm_size" {
   default = "Standard_B2s"
 }
@@ -92,15 +72,15 @@ variable "managed_disk_entity" {
 
 variable "appcode" {
   default = "OSTR"
-  
+
 }
 
 variable "number_vm" {
   default = 3
-  
+
 }
 
-variable "environment"{
+variable "environment" {
   default = "dev"
 }
 
