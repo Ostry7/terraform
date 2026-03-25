@@ -15,7 +15,7 @@ resource "azurerm_container_registry" "acr" {
 
 # create AKS
 resource "azurerm_kubernetes_cluster" "example" {
-  name                = "example-aks1"
+  name                = "example-aks1-test"
   location            = azurerm_resource_group.infra_rg_123.location
   resource_group_name = azurerm_resource_group.infra_rg_123.name
   dns_prefix          = "exampleaks1"
