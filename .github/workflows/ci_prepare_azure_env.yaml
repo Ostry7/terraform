@@ -4,7 +4,7 @@ on:
     branches:
       - features
     paths: 
-      - 'terraform/**'  #runs only if any changes on terraform dir
+      - 'Azure AKS Deployment Pipeline/terraform/**'  #runs only if any changes on terraform dir
 
 env:
   TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
