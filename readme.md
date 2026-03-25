@@ -38,7 +38,7 @@ GitHub Actions (CI/CD)
 
 Roadmap
 
-- _Stage 1_ — Infrastructure foundation with Terraform (Resource Group, ACR, AKS, VNet, Remote State)
+- _Stage 1_ — Infrastructure foundation with Terraform (Resource Group, ACR, AKS, VNet) [completed]
 - _Stage 2_ — Application + Dockerfile + push to ACR
 - _Stage 3_ — CI/CD pipeline with GitHub Actions
 - _Stage 4_ — Kubernetes manifests (Deployment, HPA, Ingress, Secrets)
