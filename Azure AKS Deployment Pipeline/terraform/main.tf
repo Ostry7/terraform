@@ -1,6 +1,6 @@
 # create resource group
 resource "azurerm_resource_group" "infra_rg_123" {
-  name     = "infra_rg_12345"
+  name     = "infra_rg_123456"
   location = "West Europe"
 }
 
@@ -21,16 +21,16 @@ resource "azurerm_kubernetes_cluster" "example" {
   dns_prefix          = "exampleaks1"
 
   default_node_pool {
-    name       = "default"
-    node_count = 1
-    vm_size    = "Standard_B2ls_v2"
+    name           = "default"
+    node_count     = 1
+    vm_size        = "Standard_B2ls_v2"
     vnet_subnet_id = azurerm_subnet.aks_subnet.id
   }
 
   network_profile {
     network_plugin = "azure"
     dns_service_ip = "10.0.0.10"
-    service_cidr = "10.0.0.0/16"
+    service_cidr   = "10.0.0.0/16"
   }
 
   identity {
