@@ -1,6 +1,6 @@
 # create resource group
 resource "azurerm_resource_group" "infra_rg_123" {
-  name     = "infra_rg_12345"
+  name     = "infra_rg_1234"
   location = "West Europe"
 }
 
