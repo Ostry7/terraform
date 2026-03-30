@@ -27,13 +27,13 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init
-        working-directory: terraform/
+        working-directory: "Azure AKS Deployment Pipeline/terraform/"
         run: terraform init
 
       - name: Terraform Plan
-        working-directory: terraform/
+        working-directory: "Azure AKS Deployment Pipeline/terraform/"
         run: terraform plan
 
       - name: Terraform Apply
-        working-directory: terraform/
+        working-directory: "Azure AKS Deployment Pipeline/terraform/"
         run: terraform apply -auto-approve
