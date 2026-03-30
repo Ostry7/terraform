@@ -1,0 +1,49 @@
+name: ci_prepare_azure_env.yaml
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - features
+    paths: 
+      - 'Azure AKS Deployment Pipeline/terraform/**'  #runs only if any changes on terraform dir
+
+env:
+  TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+jobs:
+  terraform_lint:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Terraform Lint
+        uses: actionshub/terraform-lint@main
+
+  create_azure_env:
+    needs: terraform_lint 
+    if: needs.terraform_lint.result == 'success' #runs only if terraform lint completed successfuly
+    runs-on: ubuntu-slim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        working-directory: "Azure AKS Deployment Pipeline/terraform/"
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: "Azure AKS Deployment Pipeline/terraform/"
+        run: terraform plan
+
+      - name: Terraform Apply
+        working-directory: "Azure AKS Deployment Pipeline/terraform/"
+        run: terraform apply -auto-approve
