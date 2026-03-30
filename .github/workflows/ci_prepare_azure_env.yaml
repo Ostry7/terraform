@@ -17,9 +17,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Terraform Lint
-        uses: zombocoder/terraform-lint-action@v1.0.0
+      - name: Terraform Format Check
+        working-directory: "Azure AKS Deployment Pipeline/terraform/"
+        run: terraform fmt -check -recursive
 
+      - name: Terraform Validate
+        working-directory: "Azure AKS Deployment Pipeline/terraform/"
+        run: |
+          terraform init -backend=false
+          terraform validate
+          
   create_azure_env:
     needs: terraform_lint 
     if: needs.terraform_lint.result == 'success' #runs only if terraform lint completed successfuly
