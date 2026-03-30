@@ -1,10 +1,11 @@
 name: ci_prepare_azure_env.yaml
 on:
-  push:
-    branches:
-      - features
-    paths: 
-      - 'Azure AKS Deployment Pipeline/terraform/**'  #runs only if any changes on terraform dir
+  workflow_dispatch:
+  #push:
+  #  branches:
+  #    - features
+    #paths: 
+    #  - 'terraform/**'  #runs only if any changes on terraform dir
 
 env:
   TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
