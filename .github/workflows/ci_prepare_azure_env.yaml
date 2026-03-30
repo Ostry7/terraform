@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Terraform Lint
-        uses: actionshub/terraform-lint@main
+        uses: zombocoder/terraform-lint-action@v1.0.0
 
   create_azure_env:
     needs: terraform_lint 
