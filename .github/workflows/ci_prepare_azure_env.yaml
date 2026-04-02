@@ -57,3 +57,19 @@ jobs:
       - name: Terraform Apply
         working-directory: "Azure AKS Deployment Pipeline/terraform/"
         run: terraform apply -auto-approve
+
+  acr_push:
+    needs: create_azure_env 
+    if: needs.create_azure_env.result == 'success' #runs only if create_acure_env completed successfuly
+    runs-on: ubuntu-slim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to ACR
+        run: az acr login --name acrapp01
