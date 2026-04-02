@@ -73,3 +73,11 @@ jobs:
 
       - name: Log in to ACR
         run: az acr login --name acrapp01
+
+      - name: Build and Push to ACR
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: acrapp01.azurecr.io/devops-app:latest
+          file: Azure AKS Deployment Pipeline/app/Dockerfile
+          context:  Azure AKS Deployment Pipeline/app/ 
