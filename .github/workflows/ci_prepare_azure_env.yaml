@@ -81,13 +81,10 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
       - name: Build and Push to ACR
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          tags: acrapp01.azurecr.io/devops-app:latest
-          file: Azure AKS Deployment Pipeline/app/Dockerfile
-          context: Azure AKS Deployment Pipeline/app/
+        run: |
+          az acr build \
+            --registry acrapp01 \
+            --image devops-app:latest \
+            --file "Azure AKS Deployment Pipeline/app/Dockerfile" \
+            "Azure AKS Deployment Pipeline/app/"
