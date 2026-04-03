@@ -61,7 +61,7 @@ jobs:
   acr_push:
     needs: create_azure_env 
     if: needs.create_azure_env.result == 'success' #runs only if create_acure_env completed successfuly
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
