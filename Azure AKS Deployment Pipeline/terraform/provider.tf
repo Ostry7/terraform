@@ -10,7 +10,7 @@ terraform {
     storage_account_name = "tfstate7874"
     container_name       = "tfstate"
     key                  = "terraform.tfstate"
-}
+  }
 
 }
 
