@@ -71,8 +71,8 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Enable ACR Admin
-        run: az acr update -n acrapp01 --admin-enabled true
+      #- name: Enable ACR Admin
+      #  run: az acr update -n acrapp01 --admin-enabled true
 
       - name: Start Docker daemon
         run: |
@@ -97,13 +97,20 @@ jobs:
           tags: acrapp01.azurecr.io/devops-app:latest
           file: Azure AKS Deployment Pipeline/app/Dockerfile
           context: Azure AKS Deployment Pipeline/app/
+
+      - name: Attach ACR to AKS
+        run: |
+          az aks update \
+            --resource-group infra_rg_123456 \
+            --name example-aks1-test123 \
+            --attach-acr acrapp01
       
       - name: Get AKS credentials #give AKS priviledge to get image from ACR
         run: |
           az aks get-credentials \
             --resource-group infra_rg_123456 \
             --name example-aks1-test123
-            
+
       - name: Deploy to AKS
         run: |
           kubectl apply -f "Azure AKS Deployment Pipeline/Kubernetes/deployment.yaml"
