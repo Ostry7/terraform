@@ -61,3 +61,26 @@ output "kube_config" {
 
   sensitive = true
 }
+
+# create Azure Monitor Workspace
+resource "azurerm_monitor_workspace" "kubernetes-workspace" {
+  name                = "aks-log-analytics"
+  resource_group_name = azurerm_resource_group.infra_rg_123.name
+  location            = azurerm_resource_group.infra_rg_123.location
+
+}
+
+# enable Azure Monitor on AKS
+resource "azurerm_monitor_diagnostic_setting" "aks_diagnostics" {
+  name                       = "aks-diagnostics"
+  target_resource_id         = azurerm_kubernetes_cluster.example.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.kubernetes-workspace.id
+
+  enabled_log {
+    category = "kube-apiserver"
+  }
+
+  enabled_log {
+    category = "kube-controller-manager"
+  }
+}
