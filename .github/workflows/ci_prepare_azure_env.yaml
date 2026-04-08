@@ -94,12 +94,12 @@ jobs:
           file: Azure AKS Deployment Pipeline/app/Dockerfile
           context: Azure AKS Deployment Pipeline/app/
 
-      - name: Attach ACR to AKS
-        run: |
-          az aks update \
-            --resource-group infra_rg_123456 \
-            --name example-aks1-test123 \
-            --attach-acr acrapp01
+      #- name: Attach ACR to AKS
+      #  run: |
+      #    az aks update \
+      #      --resource-group infra_rg_123456 \
+      #      --name example-aks1-test123 \
+      #      --attach-acr acrapp01
       
       - name: Get AKS credentials #give AKS priviledge to get image from ACR
         run: |
