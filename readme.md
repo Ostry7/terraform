@@ -43,3 +43,12 @@ Roadmap
 - _Stage 3_ — CI/CD pipeline with GitHub Actions [completed]
 - _Stage 4_ — Kubernetes manifests (Deployment, HPA, Ingress, Secrets)
 - _Stage 5_ — Monitoring with Azure Monitor + Log Analytics
+
+### Tip:
+
+Renew ACR password -> github secrets
+
+```yaml
+az acr credential renew --name acrapp01 --password-name password
+az acr credential show --name acrapp01 --query "passwords[0].value" --output tsv
+```
