@@ -42,6 +42,15 @@ resource "azurerm_kubernetes_cluster" "example" {
   }
 }
 
+# create ACR role
+resource "azurerm_role_assignment" "aks_acr" {
+  principal_id                     = azurerm_kubernetes_cluster.example.kubelet_identity[0].object_id
+  role_definition_name             = "AcrPull"
+  scope                            = azurerm_container_registry.acr.id
+  skip_service_principal_aad_check = true
+}
+
+
 output "client_certificate" {
   value     = azurerm_kubernetes_cluster.example.kube_config[0].client_certificate
   sensitive = true
