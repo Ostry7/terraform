@@ -6,8 +6,8 @@ app = Flask(__name__)
 facts = [
     
     "Super fact #1",
-    #"Kubernetes means 'helmsman' in Greek.",
-    #"Docker was released in 2013.",
+    "Kubernetes means 'helmsman' in Greek.",
+    "Docker was released in 2013.",
     #"Terraform is written in Go.",
     #"Azure has over 60 regions worldwide.",
     #"The first Linux kernel was released in 1991.",
