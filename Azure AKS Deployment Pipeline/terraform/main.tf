@@ -37,6 +37,10 @@ resource "azurerm_kubernetes_cluster" "example" {
     type = "SystemAssigned"
   }
 
+  oms_agent {
+    log_analytics_workspace_id = azurerm_log_analytics_workspace.aks-log-analytics.id
+  }
+
   tags = {
     Environment = "Production"
   }
