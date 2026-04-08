@@ -97,3 +97,9 @@ jobs:
           tags: acrapp01.azurecr.io/devops-app:latest
           file: Azure AKS Deployment Pipeline/app/Dockerfile
           context: Azure AKS Deployment Pipeline/app/
+      
+      - name: Get AKS credentials #give AKS priviledge to get image from ACR
+        run: |
+          az aks get-credentials \
+            --resource-group infra_rg_123456 \
+            --name example-aks1-test123
