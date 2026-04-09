@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - features
+    paths:
+      - 'Azure AKS Deployment Pipeline/**'
 
 env:
   TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
