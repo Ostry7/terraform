@@ -19,7 +19,7 @@ resource "azurerm_kubernetes_cluster" "example" {
   location            = azurerm_resource_group.gitops_rg2345234.location
   resource_group_name = azurerm_resource_group.gitops_rg2345234.name
   dns_prefix          = "exampleaks1"
-  oidc_issuer_enabled = true 
+  oidc_issuer_enabled = true
 
   default_node_pool {
     name           = "default"
