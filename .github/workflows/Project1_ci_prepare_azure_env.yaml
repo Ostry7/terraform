@@ -1,4 +1,4 @@
-name: ci_prepare_azure_env.yaml
+name: Project1_ci_prepare_azure_env.yaml
 on:
   workflow_dispatch:
   push:
