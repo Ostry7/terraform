@@ -1,0 +1,116 @@
+name: Proejct2_azure_env.yaml
+on:
+  workflow_dispatch: 
+  push: 
+    branches: 
+      - features
+    paths:
+      - 'GitOps-Based Kubernetes Platform on Azure/**'
+
+env:
+  TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+jobs:
+  terraform_lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format Check
+        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+  create_azure_env:
+    needs: terraform_lint 
+    if: needs.terraform_lint.result == 'success' #runs only if terraform lint completed successfuly
+    runs-on: ubuntu-slim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
+        run: terraform plan
+
+      - name: Terraform Apply
+        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
+        run: terraform apply -auto-approve
+
+  acr_push:
+    needs: create_azure_env 
+    if: needs.create_azure_env.result == 'success' #runs only if create_acure_env completed successfuly
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      #- name: Enable ACR Admin
+      #  run: az acr update -n acrapp01 --admin-enabled true
+
+      - name: Start Docker daemon
+        run: |
+          sudo dockerd &
+          sleep 15
+          sudo docker info
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to ACR
+        run: az acr login --name acrapp01
+#
+#      - name: Build and Push to ACR
+#        uses: docker/build-push-action@v6
+#        with:
+#          push: true
+#          tags: acrapp01.azurecr.io/devops-app:latest
+#          file: GitOps-Based Kubernetes Platform on Azure/app/Dockerfile
+#          context: GitOps-Based Kubernetes Platform on Azure/app/
+#
+#      #- name: Attach ACR to AKS
+#      #  run: |
+#      #    az aks update \
+#      #      --resource-group infra_rg_123456 \
+#      #      --name example-aks1-test123 \
+#      #      --attach-acr acrapp01
+#      
+#      - name: Get AKS credentials #give AKS priviledge to get image from ACR
+#        run: |
+#          az aks get-credentials \
+#            --resource-group infra_rg_123456 \
+#            --name example-aks1-test123
+#
+#      - name: Deploy to AKS
+#        run: |
+#          kubectl apply -f "Azure AKS Deployment Pipeline/Kubernetes/deployment.yaml"
+#          kubectl apply -f "Azure AKS Deployment Pipeline/Kubernetes/service.yaml"
+#          kubectl apply -f "Azure AKS Deployment Pipeline/Kubernetes/hpa.yaml"
+#          kubectl rollout restart deployment devops-app
+#          kubectl rollout status deployment devops-app
