@@ -83,30 +83,30 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-#      - name: Log in to ACR
-#        run: az acr login --name acrapp01
-#
-#      - name: Build and Push to ACR
-#        uses: docker/build-push-action@v6
-#        with:
-#          push: true
-#          tags: acrapp01.azurecr.io/devops-app:latest
-#          file: GitOps-Based Kubernetes Platform on Azure/app/Dockerfile
-#          context: GitOps-Based Kubernetes Platform on Azure/app/
-#
-#      #- name: Attach ACR to AKS
-#      #  run: |
-#      #    az aks update \
-#      #      --resource-group infra_rg_123456 \
-#      #      --name example-aks1-test123 \
-#      #      --attach-acr acrapp01
-#      
-#      - name: Get AKS credentials #give AKS priviledge to get image from ACR
-#        run: |
-#          az aks get-credentials \
-#            --resource-group infra_rg_123456 \
-#            --name example-aks1-test123
-#
+      - name: Log in to ACR
+        run: az acr login --name gitopscontainerregistry7677
+
+      - name: Build and Push to ACR
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: gitopscontainerregistry7677.azurecr.io/devops-app:latest
+          file: GitOps-Based Kubernetes Platform on Azure/app/Dockerfile
+          context: GitOps-Based Kubernetes Platform on Azure/app/
+
+      #- name: Attach ACR to AKS
+      #  run: |
+      #    az aks update \
+      #      --resource-group infra_rg_123456 \
+      #      --name example-aks1-test123 \
+      #      --attach-acr acrapp01
+      
+      - name: Get AKS credentials #give AKS priviledge to get image from ACR
+        run: |
+          az aks get-credentials \
+            --resource-group gitops_rg2345234 \
+            --name example-aks1_test234
+
 #      - name: Deploy to AKS
 #        run: |
 #          kubectl apply -f "Azure AKS Deployment Pipeline/Kubernetes/deployment.yaml"
