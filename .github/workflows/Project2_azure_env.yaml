@@ -83,8 +83,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to ACR
-        run: az acr login --name acrapp01
+#      - name: Log in to ACR
+#        run: az acr login --name acrapp01
 #
 #      - name: Build and Push to ACR
 #        uses: docker/build-push-action@v6
