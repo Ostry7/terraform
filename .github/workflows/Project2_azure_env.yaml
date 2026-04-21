@@ -1,4 +1,4 @@
-name: Proejct2_azure_env.yaml
+name: Project2_azure_env.yaml
 on:
   workflow_dispatch: 
   push: 
