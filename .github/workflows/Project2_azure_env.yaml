@@ -109,8 +109,8 @@ jobs:
 
       - name: Deploy to AKS
         run: |
-          kubectl apply -f "Azure AKS Deployment Pipeline/Kubernetes/deployment.yaml"
-          kubectl apply -f "Azure AKS Deployment Pipeline/Kubernetes/service.yaml"
+          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/Kubernetes/deployment.yaml"
+          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/Kubernetes/service.yaml"
           
           kubectl rollout restart deployment devops-app
           kubectl rollout status deployment devops-app
