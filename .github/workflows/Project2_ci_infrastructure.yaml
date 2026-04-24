@@ -56,6 +56,15 @@ jobs:
       - name: Terraform Apply
         working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
         run: terraform apply -auto-approve
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+      
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group gitops_rg2345234 \
+            --name example-aks1_test234
     
       - name: Create Kubernetes Namespaces
         run:  |
