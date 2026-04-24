@@ -59,12 +59,18 @@ jobs:
 
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
-      
+
       - name: Get AKS credentials
         run: |
           az aks get-credentials \
             --resource-group gitops_rg2345234 \
             --name example-aks1_test234
+            
+      - name: Install ArgoCD
+        run: |
+          kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+          kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+          kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
     
       - name: Create Kubernetes Namespaces
         run:  |
