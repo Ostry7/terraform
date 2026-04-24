@@ -56,3 +56,8 @@ jobs:
       - name: Terraform Apply
         working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
         run: terraform apply -auto-approve
+    
+      - name: Create Kubernetes Namespaces
+        run:  |
+          kubectl create namespace stage --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create namespace prod --dry-run=client -o yaml | kubectl apply -f -
