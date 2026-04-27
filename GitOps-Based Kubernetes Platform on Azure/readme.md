@@ -68,6 +68,14 @@ az aks get-credentials \
 --overwrite-existing
 ```
 
+and
+```yaml
+az aks update \
+  --resource-group gitops_rg2345234 \
+  --name example-aks1_test234 \
+  --attach-acr gitopscontainerregistry7677
+```
+
 ### Project2_ci_build:
 
 This pipeline is building and pushing Docker image to ACR and updating image tag (in `gitops/dev`). Only `ArgoCD` is watching any changes on the repo and commiting the changes if needed.
