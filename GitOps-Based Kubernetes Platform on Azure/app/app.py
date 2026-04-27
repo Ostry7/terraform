@@ -6,7 +6,7 @@ app = Flask(__name__)
 facts = [
     
     "ONLY ONE FACT!",
-    "NEW FACT!!",
+    #"NEW FACT!!",
     #"Kubernetes means 'helmsman' in Greek.",
     #"Docker was released in 2013.",
     #"Terraform is written in Go.",
