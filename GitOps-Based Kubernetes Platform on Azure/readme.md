@@ -88,3 +88,12 @@ kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}
 #ArgoCD console admin password:
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
+
+To check what image is used for `dev` and `prod` deployments:
+
+```bash
+echo "DEV:"
+kubectl describe pod -n dev | grep "Image:"
+echo "PROD:"
+kubectl describe pod -n prod | grep "Image:"
+```
