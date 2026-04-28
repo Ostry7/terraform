@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/Ostry7/terraform.git
     targetRevision: HEAD
-    path: GitOps-Based Kubernetes Platform on Azure/gitops/dev
+    path: GitOps-Based Kubernetes Platform on Azure/gitops/prod
   destination:
     server: https://kubernetes.default.svc
     namespace: prod
