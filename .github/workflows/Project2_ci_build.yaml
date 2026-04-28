@@ -37,20 +37,6 @@ jobs:
           tags: gitopscontainerregistry7677.azurecr.io/devops-app:${{ github.sha }}
           file: GitOps-Based Kubernetes Platform on Azure/app/Dockerfile
           context: GitOps-Based Kubernetes Platform on Azure/app/
-      
-#      - name: Get AKS credentials #give AKS priviledge to get image from ACR
-#        run: |
-#          az aks get-credentials \
-#            --resource-group gitops_rg2345234 \
-#            --name example-aks1_test234
-#
-#      - name: Deploy to AKS
-#        run: |
-#          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/Kubernetes/deployment.yaml"
-#          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/Kubernetes/service.yaml"
-#          
-#          kubectl rollout restart deployment devops-app
-#          kubectl rollout status deployment devops-app
 
       - name: Update image tag in gitops/dev
         run:  |
