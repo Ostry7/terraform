@@ -1,0 +1,24 @@
+# pipeline deploy image tag once approval is clicked
+name: Project2_cd_prod_deploy.yaml
+on:
+  workflow_run: 
+    workflows: "Project2_ci_build.yaml"
+
+jobs:
+  promote-prod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update prod manifest
+        run: |
+          IMAGE_TAG=${{ github.event.workflow_run.head_sha }}
+
+          sed -i "s|gitopscontainerregistry7677.azurecr.io/devops-app:.*|gitopscontainerregistry7677.azurecr.io/devops-app:${IMAGE_TAG}|" \
+            "GitOps-Based Kubernetes Platform on Azure/gitops/prod/deployment.yaml"
+
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          git commit -am "Promote to prod ${IMAGE_TAG}"
+          git push
