@@ -3,6 +3,8 @@ name: Project2_cd_prod_deploy.yaml
 on:
   workflow_run: 
     workflows: "Project2_ci_build.yaml"
+    types:
+      - completed
 
 jobs:
   promote-prod:
