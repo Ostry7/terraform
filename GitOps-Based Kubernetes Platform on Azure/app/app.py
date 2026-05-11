@@ -8,6 +8,7 @@ facts = [
     "Thats also new app code"
     "ONLY ONE FACT!",
     "NEW FACT!!",
+    "test",
     "Kubernetes means 'helmsman' in Greek.",
     "Docker was released in 2013.",
     "Terraform is written in Go.",
