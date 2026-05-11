@@ -4,16 +4,7 @@ import random
 app = Flask(__name__)
 
 facts = [
-    "Totally new app code ;>",
-    "Thats also new app code"
-    "ONLY ONE FACT!",
-    "NEW FACT!!",
-    "test",
-    "Kubernetes means 'helmsman' in Greek.",
-    "Docker was released in 2013.",
-    "Terraform is written in Go.",
-    "Azure has over 60 regions worldwide.",
-    "The first Linux kernel was released in 1991.",
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum imperdiet diam purus, eu varius velit porttitor non. Vestibulum ornare blandit ex, ut convallis velit interdum ut. Fusce augue justo, dignissim non mi ut, fermentum maximus dolor. Phasellus purus orci, fermentum eu tincidunt eget, eleifend nec dolor. Nam lobortis mauris tortor, in accumsan neque porta auctor. Integer elementum ornare eros, in consequat velit interdum vel. Duis euismod augue molestie ex dictum, in facilisis tortor pellentesque. Nam sagittis eu dui eget eleifend. Morbi tempus leo lacus, eu molestie magna semper sed. Interdum et malesuada fames ac ante ipsum primis in faucibus.  Sed nec elit ligula. Pellentesque pretium urna eu posuere sollicitudin. Vestibulum id maximus diam. Curabitur mollis nisl metus, in vestibulum dui volutpat vitae. Cras     consectetur laoreet semper. Nam eget eleifend diam, non aliquet purus. Quisque enim risus, faucibus ut nisi ac, fermentum vehicula est. Integer vitae tristique felis. Integer elementum ac risus eu dapibus. Fusce dignissim ex leo, eu gravida metus auctor sed."
 ]
 
 @app.route("/")
