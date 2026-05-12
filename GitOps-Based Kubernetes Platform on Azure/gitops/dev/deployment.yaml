@@ -9,14 +9,14 @@ spec:
   selector:
     matchLabels:
       app: devops-app
-    annotations:
-      prometheus.io/scrape: "true"
-      prometheus.io/port: "5000"
-      prometheus.io/path: "/metrics"
   template:
     metadata:
       labels:
         app: devops-app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: devops-app
