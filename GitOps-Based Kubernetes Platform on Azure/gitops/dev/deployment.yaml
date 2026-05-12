@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: devops-app
-          image: gitopscontainerregistry7677.azurecr.io/devops-app:90b6902d5ae9fcfe03a3df925d646385bbd0d701
+          image: gitopscontainerregistry7677.azurecr.io/devops-app:ed986bd4dc82b545a9bc0970af03f592a2d1ae93
           ports:
             - containerPort: 5000
           resources:
