@@ -6,9 +6,8 @@ import os
 
 app = Flask(__name__)
 metrics = PrometheusMetrics(app) 
-ENV = os.getenv("ENV", "dev")
-
-metrics.add_common_labels({"env": ENV})
+#ENV = os.getenv("ENV", "dev")
+#metrics.add_common_labels({"env": ENV})
 
 fact_counter = Counter('fact_requests_total', 'Total number of /fact requests')
 health_counter = Counter('health_requests_total', 'Total number of /health requests')
