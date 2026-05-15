@@ -105,6 +105,7 @@ jobs:
             --name example-aks1_test234     
       - name: Install Prometheus
         run: |
+          kubectl create namespace monitoring
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/gitops/monitoring/Prometheus/"
   
       - name: Install Grafana
