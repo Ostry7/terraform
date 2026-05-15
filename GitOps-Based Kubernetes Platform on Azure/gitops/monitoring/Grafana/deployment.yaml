@@ -58,7 +58,7 @@ spec:
               name: grafana-datasource
             - mountPath: /etc/grafana/provisioning/dashboards
               name: grafana-dashboard
-            - mountPath: /etc/grafana/provisioning/dashboards/provisioning  # ← dodaj
+            - mountPath: /etc/grafana/provisioning/dashboards/provisioning
               name: grafana-dashboard-provisioning
 
       volumes:
@@ -71,6 +71,6 @@ spec:
         - name: grafana-dashboard
           configMap:
             name: grafana-dashboard
-        - name: grafana-dashboard-provisioning  # ← dodaj
+        - name: grafana-dashboard-provisioning
           configMap:
             name: grafana-dashboard-provisioning
