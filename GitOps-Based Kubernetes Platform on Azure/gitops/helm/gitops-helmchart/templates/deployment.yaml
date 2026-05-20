@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.global.app_name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.global.app_name }}
+    env: {{ .Values.global.environment }}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: {{ .Values.global.app_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.global.app_name }}
+        env: {{ .Values.global.environment }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: {{ .Values.global.app_name }}
+          image: gitopscontainerregistry7677.azurecr.io/devops-app:8b0916b5bf16cfb504d6d7f498a444f8e12ea982
+          ports:
+            - containerPort: 5000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
