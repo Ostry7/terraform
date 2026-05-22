@@ -54,7 +54,7 @@ jobs:
           IMAGE_TAG=${{ github.sha }}
       
           sed -i "s|tag:.*|tag: ${IMAGE_TAG}|" \
-            GitOps-Based Kubernetes Platform on Azure/gitops/helm/gitops-helmchart/environment/dev/values.yaml
+            "GitOps-Based Kubernetes Platform on Azure/gitops/helm/gitops-helmchart/environment/dev/values.yaml"
       
           git config user.email "github-actions@github.com"
           git config user.name "GitHub Actions"
