@@ -37,14 +37,28 @@ jobs:
           tags: gitopscontainerregistry7677.azurecr.io/devops-app:${{ github.sha }}
           file: GitOps-Based Kubernetes Platform on Azure/app/Dockerfile
           context: GitOps-Based Kubernetes Platform on Azure/app/
+          
+      #- name: Update image tag in gitops/dev
+      #  run:  |
+      #    IMAGE_TAG=${{ github.sha }}
+      #    sed -i "s|gitopscontainerregistry7677.azurecr.io/devops-app:.*|gitopscontainerregistry7677.azurecr.io/devops-app:${IMAGE_TAG}|" \
+      #      "GitOps-Based Kubernetes Platform on Azure/gitops/dev/deployment.yaml"
+      #    git config user.email "github-actions@github.com"
+      #    git config user.name "GitHub Actions"
+      #    git add "GitOps-Based Kubernetes Platform on Azure/gitops/dev/deployment.yaml"
+      #    git commit -m "Update dev image tag to ${IMAGE_TAG}"
+      #    git push
 
-      - name: Update image tag in gitops/dev
-        run:  |
+      - name: Update Helm values image tag
+        run: |
           IMAGE_TAG=${{ github.sha }}
-          sed -i "s|gitopscontainerregistry7677.azurecr.io/devops-app:.*|gitopscontainerregistry7677.azurecr.io/devops-app:${IMAGE_TAG}|" \
-            "GitOps-Based Kubernetes Platform on Azure/gitops/dev/deployment.yaml"
+      
+          sed -i "s|tag:.*|tag: ${IMAGE_TAG}|" \
+            GitOps-Based Kubernetes Platform on Azure/gitops/helm/gitops-helmchart/environment/dev/values.yaml
+      
           git config user.email "github-actions@github.com"
           git config user.name "GitHub Actions"
-          git add "GitOps-Based Kubernetes Platform on Azure/gitops/dev/deployment.yaml"
+      
+          git add GitOps-Based Kubernetes Platform on Azure/gitops/dev/values.yaml
           git commit -m "Update dev image tag to ${IMAGE_TAG}"
           git push
