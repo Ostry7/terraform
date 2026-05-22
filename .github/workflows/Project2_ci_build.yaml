@@ -59,6 +59,6 @@ jobs:
           git config user.email "github-actions@github.com"
           git config user.name "GitHub Actions"
       
-          git add GitOps-Based Kubernetes Platform on Azure/gitops/dev/values.yaml
+          git add "GitOps-Based Kubernetes Platform on Azure/gitops/helm/gitops-helmchart/environment/dev/values.yaml"
           git commit -m "Update dev image tag to ${IMAGE_TAG}"
           git push
