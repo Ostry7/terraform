@@ -23,7 +23,8 @@ spec:
     spec:
       containers:
         - name: {{ .Values.global.app_name }}
-          image: gitopscontainerregistry7677.azurecr.io/devops-app:8b0916b5bf16cfb504d6d7f498a444f8e12ea982
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 5000
           resources:

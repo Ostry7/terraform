@@ -97,3 +97,6 @@ kubectl describe pod -n dev | grep "Image:"
 echo "PROD:"
 kubectl describe pod -n prod | grep "Image:"
 ```
+
+Working Grafana dashboard:
+![alt text](image.png)
