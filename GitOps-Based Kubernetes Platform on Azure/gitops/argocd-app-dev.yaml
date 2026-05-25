@@ -8,7 +8,10 @@ spec:
   source:
     repoURL: https://github.com/Ostry7/terraform.git
     targetRevision: HEAD
-    path: GitOps-Based Kubernetes Platform on Azure/gitops/dev
+    path: gitops/helm/gitops-helmchart
+    helm:
+      valueFiles:
+        - environment/dev/values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: dev
