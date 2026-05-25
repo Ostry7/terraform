@@ -19,10 +19,14 @@ jobs:
         run: |
           IMAGE_TAG=${{ github.event.workflow_run.head_sha }}
 
-          sed -i "s|gitopscontainerregistry7677.azurecr.io/devops-app:.*|gitopscontainerregistry7677.azurecr.io/devops-app:${IMAGE_TAG}|" \
-            "GitOps-Based Kubernetes Platform on Azure/gitops/prod/deployment.yaml"
-
+          sed -i "s|tag:.*|tag: ${IMAGE_TAG}|" \
+            "GitOps-Based Kubernetes Platform on Azure/gitops/helm/gitops-helmchart/environment/prod/values.yaml"
+      
           git config user.email "github-actions@github.com"
           git config user.name "GitHub Actions"
-          git commit -am "Promote to prod ${IMAGE_TAG}"
+      
+          git add "GitOps-Based Kubernetes Platform on Azure/gitops/helm/gitops-helmchart/environment/prod/values.yaml"
+          git commit -m "Update dev image tag to ${IMAGE_TAG}"
           git push
+
+      
