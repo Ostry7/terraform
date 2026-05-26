@@ -16,7 +16,6 @@ AKS (Azure Kubernetes Service)
         │
         ├── Helm (application deployment)
         ├── Namespaces (dev / prod)
-        ├── PostgreSQL
         ├── Prometheus
         └── Grafana
 ```
@@ -54,12 +53,40 @@ az ad sp create-for-rbac \
 
 ### Project2_ci_infrastructure:
 
-This pipeline creates whole environment based on `/terraform/` directory. Worflow sequence:
+This pipeline creates whole environment based on `terraform/` directory. Worflow sequence:
 - `terraform-lint` -> checks terraform syntax,
 - `terraform init`, `terraform plan`, `terraform apply` -> creates all resources (as terraform is declarative instead of imperative it creates only missing resources),
 - `install ArgoCD` -> using `kubectl` it installs ArgoCD,
 - `kubectl  create namespace dev`, `kubectl create namespace prod` -> creating `dev` and `prod` namespaces in Kubernetes.
+- deploy `argocd-app-dev.yaml` and `argocd-app-prod.yaml` application using `kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/gitops/argocd-app-dev.yaml"`
 
+Based on different Helm values files proper environment will use correct values i.e. for `dev`:
+```yaml
+[...] #argocd-app-dev.yaml
+    helm:
+      valueFiles:
+        - environment/dev/values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev
+[...]
+```
+- bootstrap monitoring objects -> using already created Kubernetes manifests the pipeline will create monitoring staff (also with previously created Grafana dashboard)
+```yaml
+[...]
+      - name: Install Prometheus
+        run: |
+          kubectl create namespace monitoring
+          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/gitops/monitoring/Prometheus/"
+  
+      - name: Install Grafana
+        run: |
+          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/gitops/monitoring/Grafana/"
+```
+
+
+
+### TIPS:
 If you're creating new environment after `terraform destroy` we need to refresh the kubeconfig:
 ```yaml
 az aks get-credentials \
