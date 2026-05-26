@@ -83,12 +83,13 @@ Based on different Helm values files proper environment will use correct values 
         run: |
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/gitops/monitoring/Grafana/"
 ```
-
+Working Grafana dashboard:
+![alt text](image.png)
 
 
 ### TIPS:
 If you're creating new environment after `terraform destroy` we need to refresh the kubeconfig:
-```yaml
+```bash
 az aks get-credentials \
 --resource-group gitops_rg2345234 \
 --name example-aks1_test234 \
@@ -96,7 +97,7 @@ az aks get-credentials \
 ```
 
 and
-```yaml
+```bash
 az aks update \
   --resource-group gitops_rg2345234 \
   --name example-aks1_test234 \
@@ -105,7 +106,7 @@ az aks update \
 
 ### Project2_ci_build:
 
-This pipeline is building and pushing Docker image to ACR and updating image tag (in `gitops/dev`). Only `ArgoCD` is watching any changes on the repo and commiting the changes if needed.
+This pipeline is building and pushing Docker image to ACR and updating image tag Helm values (based on env: `dev` and `prod`). Only `ArgoCD` is watching any changes on the repo and commiting the changes if needed.
 
 To enter the ArgoCD console we need to add LoadBalancer using:
 
@@ -125,5 +126,5 @@ echo "PROD:"
 kubectl describe pod -n prod | grep "Image:"
 ```
 
-Working Grafana dashboard:
-![alt text](image.png)
+If a change is applied to the `dev` environment, the `Project2_cd_prod_deploy.yaml` workflow is triggered. In GitHub, we have configured an environment (based on the main branch) where the pipeline pauses and waits for manual approval before proceeding with the production deployment. Once the change is approved, the image tag from the `dev` environment is also updated in the prod Helm values file. ArgoCD then detects the difference between the desired and actual state, updates the Kubernetes manifests with the new tag, and Kubernetes pulls the corresponding image.
+![alt text](image-1.png)
