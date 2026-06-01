@@ -757,9 +757,10 @@ def fact():
 
 
 # ── Start ──────────────────────────────────────────────────────────────────────
-if __name__ == "__main__":
+with app.app_context():
     try:
         init_db()
     except Exception as e:
         print(f"[WARN] init_db failed: {e}")
-    app.run(host="0.0.0.0", port=5000, debug=os.getenv("ENV","dev")=="dev")
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
