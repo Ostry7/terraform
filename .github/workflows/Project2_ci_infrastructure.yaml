@@ -76,7 +76,12 @@ jobs:
         run:  |
           kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
           kubectl create namespace prod --dry-run=client -o yaml | kubectl apply -f -
-      
+
+      - name: Create PostgreSQL DB
+        run:  |
+          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/dev/"
+        #TBD prod psql db
+
       - name: Apply ArgoCD applications
         run:  |
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/gitops/argocd-app-dev.yaml"
