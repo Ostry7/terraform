@@ -40,9 +40,9 @@ spec:
               key: postgres_db
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
-        volumeMounts:
-        - name: data
-          mountPath: /var/lib/postgresql/data
+        #volumeMounts:
+        #- name: data
+        #  mountPath: /var/lib/postgresql/data
         livenessProbe:
           exec:
             command:
@@ -65,11 +65,11 @@ spec:
           timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 3
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
-        accessModes: [ "ReadWriteOnce" ]
-        resources:
-          requests:
-            storage: 1Gi
+  #volumeClaimTemplates:
+  #  - metadata:
+  #      name: data
+  #    spec:
+  #      accessModes: [ "ReadWriteOnce" ]
+  #      resources:
+  #        requests:
+  #          storage: 1Gi
