@@ -80,7 +80,7 @@ jobs:
       - name: Create PostgreSQL DB
         run:  |
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/dev/"
-        #TBD prod psql db
+          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/prod/"
 
       - name: Apply ArgoCD applications
         run:  |
