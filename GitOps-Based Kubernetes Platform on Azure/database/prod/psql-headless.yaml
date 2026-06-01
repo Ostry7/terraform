@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: psql-db-headless
+  namespace: prod
+  labels:
+    app: psql-db
+spec:
+  clusterIP: None
+  ports:
+    - port: 5432
+      protocol: TCP
+  selector:
+    app: psql-db-headless
