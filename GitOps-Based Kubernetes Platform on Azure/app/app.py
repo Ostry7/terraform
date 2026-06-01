@@ -752,7 +752,7 @@ def fact():
     fact_counter.inc()
     facts = ["DevOps is culture, not just tools.",
              "Automate everything you do more than twice.",
-             "Observability: metrics, logs, traces."]
+             "Observability: metrics, logs, traces"]
     return jsonify({"fact": random.choice(facts)})
 
 
