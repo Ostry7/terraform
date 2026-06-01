@@ -27,6 +27,26 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 5000
+          env:
+            - name: DB_HOST
+              value: "psql-db"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: psql-configmap
+                  key: postgres_db
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: psql-configmap
+                  key: postgres_user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: psql-secret
+                  key: db_password
           resources:
             requests:
               cpu: 100m
