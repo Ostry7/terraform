@@ -67,6 +67,12 @@ spec:
           timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 3
+
+      volumes:
+      - name: sql
+        configMap:
+          name: psql-configmap
+
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -75,7 +81,3 @@ spec:
         resources:
           requests:
             storage: 1Gi
-  volumes:
-  - name: sql
-    configMap:
-      name: psql-configmap
