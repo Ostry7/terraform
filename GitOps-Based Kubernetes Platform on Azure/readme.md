@@ -89,6 +89,8 @@ Working Grafana dashboard:
 
 ### TIPS:
 If you're creating new environment after `terraform destroy` we need to refresh the kubeconfig:
+
+1. Connect local `kubectl` to Azure AKS cluster:
 ```bash
 az aks get-credentials \
 --resource-group gitops_rg2345234 \
@@ -96,7 +98,7 @@ az aks get-credentials \
 --overwrite-existing
 ```
 
-and
+2. Connect AKS to ACR:
 ```bash
 az aks update \
   --resource-group gitops_rg2345234 \
@@ -128,3 +130,27 @@ kubectl describe pod -n prod | grep "Image:"
 
 If a change is applied to the `dev` environment, the `Project2_cd_prod_deploy.yaml` workflow is triggered. In GitHub, we have configured an environment (based on the main branch) where the pipeline pauses and waits for manual approval before proceeding with the production deployment. Once the change is approved, the image tag from the `dev` environment is also updated in the prod Helm values file. ArgoCD then detects the difference between the desired and actual state, updates the Kubernetes manifests with the new tag, and Kubernetes pulls the corresponding image.
 ![alt text](image-1.png)
+
+
+### Prepare fake data (fake inserts)
+
+Ino `psql-configmap.yaml` we've got some fake generated inserts:
+```yaml
+[...]
+ fake_insert.sql: |
+    INSERT INTO products (name, price, category)
+    SELECT
+      t.name || ' ' || i,
+      round((t.base_price + random() * t.variance)::numeric, 2),
+      t.category
+    FROM generate_series(1, 500) i
+[...]
+```
+It'll be mounted into `psql-db-0` pod under `/sql` directory. To insert some fake data do the following:
+```yaml
+# connect into pod:
+kubectl exec -it psql-db-0 -n prod -- /bin/bash 
+
+# run psql statement:
+sql -U looser -d devspace -f /sql/fake_insert.sql
+ ```
