@@ -11,10 +11,6 @@ RUN pip install -r requirements.txt
 # Copy app code
 COPY app.py .
 
-# Copy fake inserts
-COPY fake_products_insert.sql /app/
-COPY fake_users_insert.sql /app/
-
 # Expose 5000 port
 EXPOSE 5000
 
