@@ -28,6 +28,8 @@ spec:
           ports:
             - containerPort: 5000
           env:
+            - name: ENV
+              value: {{ .Values.global.environment }}
             - name: DB_HOST
               value: "psql-db"
             - name: DB_PORT
