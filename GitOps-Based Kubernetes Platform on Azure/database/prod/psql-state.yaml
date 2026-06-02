@@ -43,6 +43,8 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /var/lib/postgresql/data
+        - name: sql
+          mountPath: /sql
         livenessProbe:
           exec:
             command:
@@ -73,3 +75,7 @@ spec:
         resources:
           requests:
             storage: 1Gi
+  volumes:
+  - name: sql
+    configMap:
+      name: psql-configmap

@@ -6,4 +6,39 @@ metadata:
 data:
   postgres_user:  "looser"
   postgres_db:  "devspace"
-  
+
+  fake_insert.sql: |
+    INSERT INTO products (name, price, category)
+    SELECT
+      t.name || ' ' || i,
+      round((t.base_price + random() * t.variance)::numeric, 2),
+      t.category
+    FROM generate_series(1, 500) i
+    CROSS JOIN (
+      SELECT * FROM (VALUES
+        ('Dell Monitor 27"', 1200, 400, 'it'),
+        ('Logitech MX Master 3S', 350, 80, 'it'),
+        ('Mechanical Keyboard Keychron K8', 450, 150, 'it'),
+        ('USB-C Docking Station', 600, 200, 'it')
+      ) AS t(name, base_price, variance, category)
+    ) t;
+
+    INSERT INTO users (name, email, role)
+    SELECT
+      first || ' ' || last,
+      lower(first || '.' || last || '@company.local'),
+      CASE
+        WHEN i % 12 = 0 THEN 'admin'
+        WHEN i % 5 = 0 THEN 'manager'
+        ELSE 'user'
+      END
+    FROM generate_series(1, 500) i
+    CROSS JOIN LATERAL (
+      SELECT
+        (ARRAY[
+          'Jan','Adam','Piotr','Kamil','Marek','Tomasz','Paweł','Łukasz','Jakub','Dawid'
+        ])[1 + floor(random()*10)::int] AS first,
+        (ARRAY[
+          'Kowalski','Nowak','Wiśniewski','Wójcik','Kowalczyk','Kamiński','Lewandowski'
+        ])[1 + floor(random()*7)::int] AS last
+    ) t;
