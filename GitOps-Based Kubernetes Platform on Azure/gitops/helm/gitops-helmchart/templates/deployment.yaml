@@ -30,8 +30,8 @@ spec:
           env:
             - name: ENV
               value: {{ .Values.global.environment }}
-            - name: DB_HOST
-              value: "cnpg-cluster-rw.database.svc.cluster.local" #CNPG service (read-write)
+            - name: DB_HOST #CNPG service (read-write)
+              value: {{ .Values.global.db_host }}
             - name: DB_PORT
               value: "5432"
             - name: DB_NAME
