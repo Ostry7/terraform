@@ -9,5 +9,14 @@ spec:
     initdb:
       database: devops_db
       owner: app
+      postInitSQL:
+        - |
+          INSERT INTO users (name, email, role) VALUES
+            ('Jan Kowalski', 'jan@example.com', 'admin'),
+            ('Anna Nowak', 'anna@example.com', 'user');
+        - |
+          INSERT INTO products (name, price, category) VALUES
+            ('Laptop', 3999.99, 'electronics'),
+            ('Klawiatura', 199.99, 'accessories');
   storage:
     size: 1Gi
