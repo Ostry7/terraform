@@ -26,26 +26,6 @@ def get_db():
         password = os.getenv("DB_PASSWORD", "postgres"),
     )
 
-def init_db():
-    """Create demo tables if they don't exist."""
-    with get_db() as conn:
-        with conn.cursor() as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    id      SERIAL PRIMARY KEY,
-                    name    VARCHAR(100) NOT NULL,
-                    email   VARCHAR(150) NOT NULL,
-                    role    VARCHAR(50)  DEFAULT 'user'
-                );
-                CREATE TABLE IF NOT EXISTS products (
-                    id       SERIAL PRIMARY KEY,
-                    name     VARCHAR(100) NOT NULL,
-                    price    NUMERIC(10,2) NOT NULL,
-                    category VARCHAR(80)   DEFAULT 'general'
-                );
-            """)
-            conn.commit()
-
 # ── HTML template ──────────────────────────────────────────────────────────────
 HTML = """<!DOCTYPE html>
 <html lang="en">
@@ -757,10 +737,5 @@ def fact():
 
 
 # ── Start ──────────────────────────────────────────────────────────────────────
-with app.app_context():
-    try:
-        init_db()
-    except Exception as e:
-        print(f"[WARN] init_db failed: {e}")
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
