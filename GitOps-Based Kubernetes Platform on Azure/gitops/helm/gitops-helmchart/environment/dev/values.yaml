@@ -168,3 +168,4 @@ global:
   container_name: "devops-app-container"
   namespace:  "dev"
   environment:  "dev"
+  db_host:  "cnpg-cluster-rw.dev.svc.cluster.local"
