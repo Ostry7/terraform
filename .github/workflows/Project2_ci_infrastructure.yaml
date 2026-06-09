@@ -77,10 +77,30 @@ jobs:
           kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
           kubectl create namespace prod --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Create PostgreSQL DB
-        run:  |
+      - name: Install CloudNativePG
+        run: |
+          kubectl apply --server-side -f \
+            https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.29/releases/cnpg-1.29.1.yaml
+          kubectl wait --for=condition=available --timeout=300s \
+            deployment/cnpg-controller-manager -n cnpg-system
+
+      #- name: Install CNPG plugin
+      #  run: |
+      #    curl -sSfL \
+      #    https://raw.githubusercontent.com/cloudnative-pg/artifacts/main/manifests/operator-manifest.yaml | \
+      #    kubectl apply --server-side -f -
+
+      - name: Create PostreSQL DB
+        run: |
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/dev/"
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/prod/"
+
+      - name: Wait for CNPG clusters
+        run: |
+          kubectl wait --for=condition=Ready cluster/cnpg-cluster \
+            -n dev --timeout=300s
+          kubectl wait --for=condition=Ready cluster/cnpg-cluster \
+            -n prod --timeout=300s
 
       - name: Apply ArgoCD applications
         run:  |
