@@ -31,24 +31,21 @@ spec:
             - name: ENV
               value: {{ .Values.global.environment }}
             - name: DB_HOST
-              value: "psql-db"
+              value: "cnpg-cluster-rw.database.svc.cluster.local" #CNPG service (read-write)
             - name: DB_PORT
               value: "5432"
             - name: DB_NAME
-              valueFrom:
-                configMapKeyRef:
-                  name: psql-configmap
-                  key: postgres_db
+              value: "devops_db" #db from bootstrap CNPG cluster
             - name: DB_USER
               valueFrom:
-                configMapKeyRef:
-                  name: psql-configmap
-                  key: postgres_user
+                secretKeyRef:
+                  name: cnpg-cluster-app 
+                  key: username
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: psql-secret
-                  key: db_password
+                  name: cnpg-cluster-app 
+                  key: password
           resources:
             requests:
               cpu: 100m
