@@ -1,0 +1,23 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cnpg-cluster-dr
+  namespace: prod
+spec:
+  instances: 1
+
+  replica:
+    enabled: true
+    source: cnpg-cluster-primary
+
+  externalClusters:
+    - name: cnpg-cluster-primary
+      barmanObjectStore:
+        destinationPath: "<storage_account_path>"
+        azureCredentials:
+          inheritFromAzureAD: true
+        wal:
+          compression: gzip
+
+  storage:
+    size: 1Gi
