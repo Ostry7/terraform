@@ -155,7 +155,7 @@ jobs:
       - name: Apply DR cluster manifest
         run: |
           sed -i "s|<storage_account_path>|${{ env.WAL_PATH }}|g" \
-            "GitOps-Based Kubernetes Platform on Azure/database/dr/cnpg-cluster-dr.yaml"
+            "GitOps-Based Kubernetes Platform on Azure/database/dr/cnpg-dr-cluster.yaml"
           kubectl --context=aks-dr apply -f \
             "GitOps-Based Kubernetes Platform on Azure/database/dr/"
 
