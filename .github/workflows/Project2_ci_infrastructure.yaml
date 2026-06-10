@@ -84,14 +84,10 @@ jobs:
           kubectl wait --for=condition=available --timeout=300s \
             deployment/cnpg-controller-manager -n cnpg-system
 
-      #- name: Install CNPG plugin
-      #  run: |
-      #    curl -sSfL \
-      #    https://raw.githubusercontent.com/cloudnative-pg/artifacts/main/manifests/operator-manifest.yaml | \
-      #    kubectl apply --server-side -f -
-
       - name: Create PostreSQL DB
         run: |
+          sed -i "s|<storage_account_path>|https://$(terraform -chdir='GitOps-Based Kubernetes Platform on Azure/terraform/' output -raw wal_storage_account_name).blob.core.windows.net/wal-archive|g" \
+            "GitOps-Based Kubernetes Platform on Azure/database/prod/cnpg.yaml"
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/dev/"
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/prod/"
 
@@ -106,7 +102,63 @@ jobs:
         run:  |
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/gitops/argocd-app-dev.yaml"
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/gitops/argocd-app-prod.yaml"
+
+  create_dr_env:
+    needs: create_azure_env
+    if: needs.create_azure_env.result == 'success'
+    runs-on: ubuntu-slim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3  
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
+        run: terraform init
+
+      - name: Get Terraform outputs
+        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
+        run: |
+          echo "DR_RG=$(terraform output -raw dr_resource_group)" >> $GITHUB_ENV
+          echo "DR_AKS=$(terraform output -raw dr_aks_name)" >> $GITHUB_ENV
+          echo "WAL_PATH=https://$(terraform output -raw wal_storage_account_name).blob.core.windows.net/wal-archive" >> $GITHUB_ENV
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Get AKS credentials (DR site)
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ env.DR_RG }} \
+            --name ${{ env.DR_AKS }} \
+            --context aks-dr
   
+      - name: Install CloudNativePG (DR site)
+        run: |
+          kubectl --context=aks-dr apply --server-side -f \
+            https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.29/releases/cnpg-1.29.1.yaml
+          kubectl --context=aks-dr wait --for=condition=available --timeout=300s \
+            deployment/cnpg-controller-manager -n cnpg-system
+
+      - name: Create prod namespace (DR)
+        run: |
+          kubectl --context=aks-dr create namespace prod \
+            --dry-run=client -o yaml | kubectl --context=aks-dr apply -f -
+
+      - name: Apply DR cluster manifest
+        run: |
+          sed -i "s|<storage_account_path>|${{ env.WAL_PATH }}|g" \
+            "GitOps-Based Kubernetes Platform on Azure/database/dr/cnpg-cluster-dr.yaml"
+          kubectl --context=aks-dr apply -f \
+            "GitOps-Based Kubernetes Platform on Azure/database/dr/"
+
   bootstrap_monitoring:
     needs:  create_azure_env
     if: needs.create_azure_env.result == 'success' #create monitoring stack only if the rest env have already created
