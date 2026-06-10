@@ -49,3 +49,43 @@ resource "azurerm_role_assignment" "aks_acr" {
   scope                            = azurerm_container_registry.acr.id
   skip_service_principal_aad_check = true
 }
+
+# Storage Account dla WAL 
+resource "azurerm_storage_account" "wal" {
+  name                     = "walarchive${random_string.suffix.result}"
+  resource_group_name      = azurerm_resource_group.gitops_rg2345234.name
+  location                 = azurerm_resource_group.gitops_rg2345234.location
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+
+  tags = {
+    Environment = "Production"
+  }
+}
+
+resource "random_string" "suffix" {
+  length  = 6
+  special = false
+  upper   = false
+}
+
+resource "azurerm_storage_container" "wal" {
+  name                  = "wal-archive"
+  storage_account_name  = azurerm_storage_account.wal.name
+  container_access_type = "private"
+}
+
+resource "azurerm_role_assignment" "primary_wal" {
+  principal_id                     = azurerm_kubernetes_cluster.example.kubelet_identity[0].object_id
+  role_definition_name             = "Storage Blob Data Contributor"
+  scope                            = azurerm_storage_account.wal.id
+  skip_service_principal_aad_check = true
+}
+
+output "wal_storage_account_name" {
+  value = azurerm_storage_account.wal.name
+}
+
+output "wal_container_name" {
+  value = azurerm_storage_container.wal.name
+}
