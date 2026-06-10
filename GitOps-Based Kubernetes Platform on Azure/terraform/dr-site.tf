@@ -7,23 +7,23 @@ resource "azurerm_resource_group" "gitops_rg2345234_dr" {
 # DR VNet
 resource "azurerm_virtual_network" "dr_vnet" {
   name                = "dr-vnet"
-  location            = azurerm_resource_group.gitops_rg2345234_dr.location  
-  resource_group_name = azurerm_resource_group.gitops_rg2345234_dr.name    
+  location            = azurerm_resource_group.gitops_rg2345234_dr.location
+  resource_group_name = azurerm_resource_group.gitops_rg2345234_dr.name
   address_space       = ["10.1.0.0/16"]
 }
 
 resource "azurerm_subnet" "dr_aks_subnet" {
   name                 = "dr-aks-subnet"
-  resource_group_name  = azurerm_resource_group.gitops_rg2345234_dr.name     
+  resource_group_name  = azurerm_resource_group.gitops_rg2345234_dr.name
   virtual_network_name = azurerm_virtual_network.dr_vnet.name
   address_prefixes     = ["10.1.1.0/24"]
 }
 
 # create AKS
-resource "azurerm_kubernetes_cluster" "dr" {                                 
+resource "azurerm_kubernetes_cluster" "dr" {
   name                = "aks-dr-234623465"
-  location            = azurerm_resource_group.gitops_rg2345234_dr.location  
-  resource_group_name = azurerm_resource_group.gitops_rg2345234_dr.name      
+  location            = azurerm_resource_group.gitops_rg2345234_dr.location
+  resource_group_name = azurerm_resource_group.gitops_rg2345234_dr.name
   dns_prefix          = "aksdr"
   oidc_issuer_enabled = true
 
