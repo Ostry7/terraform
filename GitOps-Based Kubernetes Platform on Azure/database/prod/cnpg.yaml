@@ -1,7 +1,7 @@
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: cnpg-cluster
+  name: cnpg-cluster-primary
   namespace: prod
 spec:
   instances: 1
@@ -33,5 +33,15 @@ spec:
           INSERT INTO products (name, price, category) VALUES
             ('Laptop', 3999.99, 'electronics'),
             ('Klawiatura', 199.99, 'accessories');
+
+  backup:
+    barmanObjectStore:
+      destinationPath: "<storage_account_path>"
+      azureCredentials:
+        inheritFromAzureAD: true
+      wal:
+        compression: gzip
+    retentionPolicy: "2d"
+
   storage:
     size: 1Gi
