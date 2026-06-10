@@ -9,7 +9,7 @@ spec:
     initdb:
       database: devops_db
       owner: app
-      postInitSQL:
+      postInitApplicationSQL:
         - |
           CREATE TABLE IF NOT EXISTS users (
             id    SERIAL PRIMARY KEY,
@@ -23,6 +23,8 @@ spec:
             price    NUMERIC(10,2) NOT NULL,
             category VARCHAR(80) DEFAULT 'general'
           );
+          GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO app;
+          GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO app;
         - |
           INSERT INTO users (name, email, role) VALUES
             ('Jan Kowalski', 'jan@example.com', 'admin'),
