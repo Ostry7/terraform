@@ -168,4 +168,4 @@ global:
   container_name: "devops-app-container"
   namespace:  "prod"
   environment:  "prod"
-  db_host:  "cnpg-cluster-rw.prod.svc.cluster.local"
+  db_host:  "cnpg-cluster-primary-rw.prod.svc.cluster.local"
