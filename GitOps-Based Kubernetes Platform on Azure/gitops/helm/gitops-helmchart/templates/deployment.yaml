@@ -39,12 +39,12 @@ spec:
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
-                  name: cnpg-cluster-app 
+                  name: cnpg-cluster-primary-app 
                   key: username
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: cnpg-cluster-app 
+                  name: cnpg-cluster-primary-app 
                   key: password
           resources:
             requests:
