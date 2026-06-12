@@ -63,3 +63,19 @@ output "dr_aks_name" {
 output "dr_resource_group" {
   value = azurerm_resource_group.gitops_rg2345234_dr.name
 }
+
+# DR -> PROD Peering
+resource "azurerm_virtual_network_peering" "example-2" {
+  name                      = "peer2to1"
+  resource_group_name       = azurerm_resource_group.example.name
+  virtual_network_name      = azurerm_virtual_network.dr_vnet
+  remote_virtual_network_id = azurerm_virtual_network.vnet.name
+}
+
+# PROD -> DR Peering
+resource "azurerm_virtual_network_peering" "peering_prod" {
+  name                      = "peer_dr_prod"
+  resource_group_name       = azurerm_resource_group.gitops_rg2345234_dr
+  virtual_network_name      = azurerm_virtual_network.vnet.name
+  remote_virtual_network_id = azurerm_virtual_network.dr_vnet
+}
