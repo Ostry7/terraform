@@ -97,3 +97,11 @@ resource "azurerm_virtual_network_peering" "peering_prod" {
   virtual_network_name      = azurerm_virtual_network.vnet.name
   remote_virtual_network_id = azurerm_virtual_network.dr_vnet.id
 }
+
+# add priviledges for AKS to manage LoadBalancer
+resource "azurerm_role_assignment" "aks_network" {
+  principal_id                     = azurerm_kubernetes_cluster.example.identity[0].principal_id
+  role_definition_name             = "Network Contributor"
+  scope                            = azurerm_resource_group.gitops_rg2345234.id
+  skip_service_principal_aad_check = true
+}
