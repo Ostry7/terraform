@@ -89,3 +89,11 @@ output "wal_storage_account_name" {
 output "wal_container_name" {
   value = azurerm_storage_container.wal.name
 }
+
+# PROD -> DR Peering
+resource "azurerm_virtual_network_peering" "peering_prod" {
+  name                      = "peer_prod_dr"
+  resource_group_name       = azurerm_resource_group.gitops_rg2345234.name
+  virtual_network_name      = azurerm_virtual_network.vnet.name
+  remote_virtual_network_id = azurerm_virtual_network.dr_vnet
+}
