@@ -16,6 +16,21 @@ spec:
 
   externalClusters:
     - name: cnpg-cluster-primary
+      connectionParameters:
+        host: "10.240.0.62"
+        port: "5432"
+        user: streaming_replica
+        dbname: postgres
+        sslmode: verify-full
+      sslCert:
+        name: cnpg-cluster-primary-replication
+        key: tls.crt
+      sslKey:
+        name: cnpg-cluster-primary-replication
+        key: tls.key
+      sslRootCert:
+        name: cnpg-cluster-primary-ca
+        key: ca.crt
       barmanObjectStore:
         destinationPath: "<storage_account_path>"
         azureCredentials:
