@@ -9,14 +9,14 @@ resource "azurerm_virtual_network" "dr_vnet" {
   name                = "dr-vnet"
   location            = azurerm_resource_group.gitops_rg2345234_dr.location
   resource_group_name = azurerm_resource_group.gitops_rg2345234_dr.name
-  address_space       = ["10.1.0.0/16"]
+  address_space       = ["10.3.0.0/16"]
 }
 
 resource "azurerm_subnet" "dr_aks_subnet" {
   name                 = "dr-aks-subnet"
   resource_group_name  = azurerm_resource_group.gitops_rg2345234_dr.name
   virtual_network_name = azurerm_virtual_network.dr_vnet.name
-  address_prefixes     = ["10.1.1.0/24"]
+  address_prefixes     = ["10.3.1.0/24"]
 }
 
 # create AKS
