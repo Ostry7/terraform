@@ -1,0 +1,9 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Backup
+metadata:
+  name: cnpg-cluster-backup-ondemand
+  namespace: prod
+spec:
+  cluster:
+    name: cnpg-cluster-primary
+  method: barmanObjectStore
