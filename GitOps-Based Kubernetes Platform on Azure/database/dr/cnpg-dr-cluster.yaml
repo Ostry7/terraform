@@ -32,7 +32,7 @@ spec:
         name: cnpg-cluster-primary-ca
         key: ca.crt
       barmanObjectStore:
-        destinationPath: "https://walarchive80r2ln.blob.core.windows.net/wal-archive"
+        destinationPath: "<storage_account_path>"
         azureCredentials:
           inheritFromAzureAD: true
         wal:
