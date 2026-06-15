@@ -21,7 +21,7 @@ spec:
         port: "5432"
         user: streaming_replica
         dbname: postgres
-        sslmode: verify-full
+        sslmode: verify-ca
       sslCert:
         name: cnpg-cluster-primary-replication
         key: tls.crt
@@ -32,7 +32,7 @@ spec:
         name: cnpg-cluster-primary-ca
         key: ca.crt
       barmanObjectStore:
-        destinationPath: "<storage_account_path>"
+        destinationPath: "https://walarchive80r2ln.blob.core.windows.net/wal-archive"
         azureCredentials:
           inheritFromAzureAD: true
         wal:
