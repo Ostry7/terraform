@@ -159,6 +159,21 @@ jobs:
           kubectl --context=aks-dr apply -f \
             "GitOps-Based Kubernetes Platform on Azure/database/dr/"
 
+      - name: Get AKS credentials (primary -> for secret copy)
+        run: |
+          az aks get-credentials \
+            --resource-group gitops_rg2345234 \
+            --name example-aks1_test234
+            
+      - name: Copy TLS secrets from primary to DR
+        run: |
+          kubectl get secret cnpg-cluster-primary-ca -n prod -o json \
+            | jq 'del(.metadata.resourceVersion, .metadata.uid, .metadata.creationTimestamp, .metadata.ownerReferences)' \
+            | kubectl --context=aks-dr apply -f -
+          kubectl get secret cnpg-cluster-primary-replication -n prod -o json \
+            | jq 'del(.metadata.resourceVersion, .metadata.uid, .metadata.creationTimestamp, .metadata.ownerReferences)' \
+            | kubectl --context=aks-dr apply -f -
+
   bootstrap_monitoring:
     needs:  create_azure_env
     if: needs.create_azure_env.result == 'success' #create monitoring stack only if the rest env have already created
