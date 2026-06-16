@@ -6,6 +6,15 @@ metadata:
 spec:
   instances: 1
 
+  backup:
+    barmanObjectStore:
+      destinationPath: "<storage_account_path>"
+      azureCredentials:
+        inheritFromAzureAD: true
+      wal:
+        compression: gzip
+    retentionPolicy: "1d"
+
   bootstrap:
     recovery:
       source: cnpg-cluster-primary
