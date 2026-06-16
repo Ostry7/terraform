@@ -46,6 +46,11 @@ spec:
                 secretKeyRef:
                   name: cnpg-cluster-primary-app 
                   key: password
+            - name: DB_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: db_mode
           resources:
             requests:
               cpu: 100m
