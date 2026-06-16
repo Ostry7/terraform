@@ -1,0 +1,36 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cnpg_failback
+  namespace: prod
+spec:
+  instances: 1
+
+  bootstrap:
+    recovery:
+      source: cnpg-cluster-dr
+
+  replica:
+    enabled: true
+    source: cnpg-cluster-dr
+
+  externalClusters:
+    - name: cnpg-cluster-dr
+      barmanObjectStore:
+        destinationPath: "<storage_account_path>"
+        azureCredentials:
+          inheritFromAzureAD: true
+        wal:
+          compression: gzip
+
+  backup:
+    barmanObjectStore:
+      destinationPath: "<storage_account_path>"
+      azureCredentials:
+        inheritFromAzureAD: true
+      wal:
+        compression: gzip
+    retentionPolicy: "2d"
+
+  storage:
+    size: 1Gi
