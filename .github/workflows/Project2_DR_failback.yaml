@@ -85,8 +85,8 @@ jobs:
       - name: Promote primary
         run: |
           kubectl patch cluster cnpg-cluster-primary \
-            --type=merge \
-            -p '{"spec":{"replica":{"enabled":false,"source":""}}}' \
+            --type=json \
+            -p '[{"op":"remove","path":"/spec/replica"}]' \
             -n prod
           kubectl wait --for=jsonpath='{.status.phase}'="Cluster in healthy state" \
             cluster/cnpg-cluster-primary -n prod --timeout=300s
