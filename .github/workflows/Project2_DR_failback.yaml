@@ -1,0 +1,118 @@
+name: Project2_DR_failback
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Enter FAILBACK to restore primary"
+        required: true
+
+jobs:
+  failback:
+    runs-on: ubuntu-slim
+    if: github.event.inputs.confirm == 'FAILBACK'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Get AKS credentials (primary)
+        run: |
+          az aks get-credentials \
+            --resource-group gitops_rg2345234 \
+            --name example-aks1_test234
+
+      - name: Get AKS credentials (DR site)
+        run: |
+          az aks get-credentials \
+            --resource-group gitops_rg2345234_dr \
+            --name aks-dr-234623465 \
+            --context aks-dr
+
+      - name: Terraform Init
+        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
+        run: terraform init
+
+      - name: Get WAL path from Terraform
+        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
+        run: |
+          echo "WAL_PATH=https://$(terraform output -raw wal_storage_account_name).blob.core.windows.net/wal-archive" >> $GITHUB_ENV
+
+
+      - name: Create backup on DR (current primary)
+        run: |
+          kubectl --context=aks-dr delete backup cnpg-cluster-backup-ondemand -n prod --ignore-not-found
+          kubectl --context=aks-dr apply -f - <<EOF
+          apiVersion: postgresql.cnpg.io/v1
+          kind: Backup
+          metadata:
+            name: cnpg-cluster-backup-ondemand
+            namespace: prod
+          spec:
+            cluster:
+              name: cnpg-cluster-dr
+            method: barmanObjectStore
+          EOF
+          kubectl --context=aks-dr wait --for=jsonpath='{.status.phase}'=completed \
+            backup/cnpg-cluster-backup-ondemand \
+            -n prod --timeout=300s
+
+      - name: Delete old primary cluster and PVC
+        run: |
+          kubectl delete cluster cnpg-cluster-primary -n prod --ignore-not-found
+          kubectl delete pvc cnpg-cluster-primary-1 -n prod --ignore-not-found
+
+      - name: Restore primary from DR backup
+        run: |
+          sed -i "s|<storage_account_path>|${{ env.WAL_PATH }}|g" \
+            "GitOps-Based Kubernetes Platform on Azure/database/prod/cnpg.yaml"
+          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/prod/"
+          kubectl wait --for=condition=Ready cluster/cnpg-cluster-primary \
+            -n prod --timeout=600s
+
+      - name: Promote primary
+        run: |
+          kubectl patch cluster cnpg-cluster-primary \
+            --type=merge \
+            -p '{"spec":{"replica":{"enabled":false}}}' \
+            -n prod
+          kubectl wait --for=jsonpath='{.status.phase}'="Cluster in healthy state" \
+            cluster/cnpg-cluster-primary \
+            -n prod --timeout=300s
+
+      - name: Restore DR as replica
+        run: |
+          kubectl --context=aks-dr patch cluster cnpg-cluster-dr \
+            --type=merge \
+            -p '{"spec":{"replica":{"enabled":true}}}' \
+            -n prod
+
+      - name: Update db_mode back to PRIMARY
+        run: |
+          kubectl patch configmap db-config -n prod \
+            --type=merge \
+            -p '{"data":{"db_mode":"PRIMARY"}}'
+          kubectl patch configmap db-config -n dev \
+            --type=merge \
+            -p '{"data":{"db_mode":"PRIMARY"}}'
+
+      - name: Restart application pods
+        run: |
+          kubectl rollout restart deployment/devops-app -n prod
+          kubectl rollout restart deployment/devops-app -n dev
+          kubectl rollout status deployment/devops-app -n prod --timeout=120s
+
+      - name: Verify primary is active
+        run: |
+          kubectl exec cnpg-cluster-primary-1 -n prod -- \
+            psql -U postgres -c "SELECT pg_is_in_recovery();"
