@@ -1,0 +1,8 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: db-config
+  namespace: dev
+data:
+  db_host:  "cnpg-cluster-primary-rw.prod.svc.cluster.local"
+  db_mode:  "PRIMARY DB"
