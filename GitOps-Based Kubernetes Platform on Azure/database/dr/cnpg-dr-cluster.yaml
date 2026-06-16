@@ -6,6 +6,10 @@ metadata:
 spec:
   instances: 1
 
+  bootstrap:
+    recovery:
+      source: cnpg-cluster-primary
+
   backup:
     barmanObjectStore:
       destinationPath: "<storage_account_path>"
@@ -14,10 +18,6 @@ spec:
       wal:
         compression: gzip
     retentionPolicy: "1d"
-
-  bootstrap:
-    recovery:
-      source: cnpg-cluster-primary
 
   replica:
     enabled: true
