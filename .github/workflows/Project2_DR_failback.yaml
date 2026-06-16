@@ -54,12 +54,8 @@ jobs:
       - name: Create backup on DR
         run: |
           kubectl --context=aks-dr delete backup cnpg-cluster-backup-ondemand -n prod --ignore-not-found
-          kubectl --context=aks-dr apply -f \
-            "GitOps-Based Kubernetes Platform on Azure/database/dr/ondemand-backups/cnpg-on-demand-backup.yaml"
-
-          kubectl --context=aks-dr wait --for=jsonpath='{.status.phase}'=completed \
-            backup/cnpg-cluster-backup-ondemand \
-            -n prod --timeout=300s
+          kubectl --context=aks-dr apply -f "GitOps-Based Kubernetes Platform on Azure/database/dr/ondemand-backups/cnpg-on-demand-backup.yaml"
+          kubectl --context=aks-dr wait --for=jsonpath='{.status.phase}'=completed backup/cnpg-cluster-backup-ondemand -n prod --timeout=300s
 
       - name: Switch to primary cluster
         run: |
@@ -70,56 +66,34 @@ jobs:
 
       - name: Prepare manifests (primary + DR)
         run: |
-          sed -i "s|<storage_account_path>|${{ env.WAL_PATH }}|g" \
-            "GitOps-Based Kubernetes Platform on Azure/database/prod/cnpg.yaml"
-      
-          sed -i "s|<storage_account_path>|${{ env.WAL_PATH }}|g" \
-            "GitOps-Based Kubernetes Platform on Azure/database/dr/cnpg-dr-cluster.yaml"
+          sed -i "s|<storage_account_path>|${{ env.WAL_PATH }}|g" "GitOps-Based Kubernetes Platform on Azure/database/prod/cnpg.yaml"
+          sed -i "s|<storage_account_path>|${{ env.WAL_PATH }}|g" "GitOps-Based Kubernetes Platform on Azure/database/dr/cnpg-dr-cluster.yaml"
 
       - name: Restore primary from DR backup
         run: |
-          kubectl apply -f \
-            "GitOps-Based Kubernetes Platform on Azure/database/prod/cnpg.yaml"
-
-          kubectl wait --for=condition=Ready cluster/cnpg-cluster-primary \
-            -n prod --timeout=600s
+          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/prod/cnpg.yaml"
+          kubectl wait --for=condition=Ready cluster/cnpg-cluster-primary -n prod --timeout=600s
 
       - name: Promote primary
         run: |
-          kubectl patch cluster cnpg-cluster-primary \
-            --type=merge \
-            -p '{"spec":{"replica":{"enabled":false}}}' \
-            -n prod
-
-          kubectl wait --for=jsonpath='{.status.phase}'="Cluster in healthy state" \
-            cluster/cnpg-cluster-primary \
-            -n prod --timeout=300s
+          kubectl patch cluster cnpg-cluster-primary --type=merge -p '{"spec":{"replica":{"enabled":false}}}' -n prod
+          kubectl wait --for=jsonpath='{.status.phase}'="Cluster in healthy state" cluster/cnpg-cluster-primary -n prod --timeout=300s
 
       - name: Restore DR as replica
         run: |
-          kubectl --context=aks-dr patch cluster cnpg-cluster-dr \
-            --type=merge \
-            -p '{"spec":{"replica":{"enabled":true}}}' \
-            -n prod
+          kubectl --context=aks-dr patch cluster cnpg-cluster-dr --type=merge -p '{"spec":{"replica":{"enabled":true}}}' -n prod
 
       - name: Update db_mode back to PRIMARY
         run: |
-          kubectl patch configmap db-config -n prod \
-            --type=merge \
-            -p '{"data":{"db_mode":"PRIMARY"}}'
-
-          kubectl patch configmap db-config -n dev \
-            --type=merge \
-            -p '{"data":{"db_mode":"PRIMARY"}}'
+          kubectl patch configmap db-config -n prod --type=merge -p '{"data":{"db_mode":"PRIMARY"}}'
+          kubectl patch configmap db-config -n dev --type=merge -p '{"data":{"db_mode":"PRIMARY"}}'
 
       - name: Restart application pods
         run: |
           kubectl rollout restart deployment/devops-app -n prod
           kubectl rollout restart deployment/devops-app -n dev
-
           kubectl rollout status deployment/devops-app -n prod --timeout=120s
 
       - name: Verify primary is active
         run: |
-          kubectl exec cnpg-cluster-primary-1 -n prod -- \
-            psql -U postgres -c "SELECT pg_is_in_recovery();"
+          kubectl exec cnpg-cluster-primary-1 -n prod -- psql -U postgres -c "SELECT pg_is_in_recovery();"
