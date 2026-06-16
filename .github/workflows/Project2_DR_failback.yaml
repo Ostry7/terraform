@@ -68,10 +68,13 @@ jobs:
             --name example-aks1_test234 \
             --overwrite-existing
 
-      - name: Prepare primary manifest
+      - name: Prepare manifests (primary + DR)
         run: |
           sed -i "s|<storage_account_path>|${{ env.WAL_PATH }}|g" \
             "GitOps-Based Kubernetes Platform on Azure/database/prod/cnpg.yaml"
+      
+          sed -i "s|<storage_account_path>|${{ env.WAL_PATH }}|g" \
+            "GitOps-Based Kubernetes Platform on Azure/database/dr/cnpg-dr-cluster.yaml"
 
       - name: Restore primary from DR backup
         run: |
