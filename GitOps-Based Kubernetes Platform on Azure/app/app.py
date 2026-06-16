@@ -95,6 +95,23 @@ HTML = """<!DOCTYPE html>
     color: var(--muted);
     letter-spacing: .1em;
   }
+  .db-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: .1em;
+  }
+  .db-badge.primary {
+    border: 1px solid rgba(0,229,195,.4);
+    color: #00e5c3;
+    background: rgba(0,229,195,.08);
+  }
+  .db-badge.dr {
+    border: 1px solid rgba(255,77,109,.4);
+    color: #ff4d6d;
+    background: rgba(255,77,109,.08);
+  }
 
   /* ── LAYOUT ── */
   .main {
@@ -347,6 +364,9 @@ HTML = """<!DOCTYPE html>
 <header>
   <div class="logo">devops<span>/</span>portfolio <span>— db manager</span></div>
   <div class="env-badge">{{ env }}</div>
+  <div class="db-badge {{ 'dr' if db_mode == 'DR' else 'primary' }}">
+    db: {{ db_mode }}
+  </div>
   <div class="status-dot"></div>
 </header>
 
@@ -608,7 +628,8 @@ def index():
                 products = cur.fetchall()
         return render_template_string(HTML,
             users=users, products=products,
-            env=os.getenv("ENV", "dev"))
+            env=os.getenv("ENV", "dev"),
+            db_mode=os.getenv("DB_MODE", "PRIMARY"))
     except Exception as e:
         return f"<pre>DB error: {e}</pre>", 500
 
