@@ -78,7 +78,7 @@ jobs:
         run: |
           sed -i "s|<storage_account_path>|${{ env.WAL_PATH }}|g" \
             "GitOps-Based Kubernetes Platform on Azure/database/prod/cnpg-failback.yaml"
-          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/prod/cnpg-failback.yaml"
+          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/prod/cnpg_failback.yaml"
           kubectl wait --for=condition=Ready cluster/cnpg-cluster-primary \
             -n prod --timeout=600s
 
