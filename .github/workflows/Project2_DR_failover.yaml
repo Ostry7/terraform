@@ -1,0 +1,70 @@
+name: Project2_DR_failover
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Enter FAILOVER to start DR"
+        required: true
+
+jobs:
+  failover:
+    runs-on: ubuntu-slim
+    if: github.event.inputs.confirm == 'FAILOVER'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Get AKS credentials (DR site)
+        run: |
+          az aks get-credentials \
+            --resource-group gitops_rg2345234_dr \
+            --name aks-dr-234623465 \
+            --context aks-dr
+
+      - name: Promote DR to primary
+        run: |
+          kubectl --context=aks-dr patch cluster cnpg-cluster-dr \
+            --type=merge \
+            -p '{"spec":{"replica":{"enabled":false}}}' \
+            -n prod
+
+      - name: Wait for DR to become primary
+        run: |
+          kubectl --context=aks-dr wait --for=jsonpath='{.status.phase}'="Cluster in healthy state" \
+            cluster/cnpg-cluster-dr \
+            -n prod --timeout=300s
+
+      - name: Verify DR is now primary
+        run: |
+          kubectl --context=aks-dr exec -it cnpg-cluster-dr-1 -n prod -- \
+            psql -U postgres -c "SELECT pg_is_in_recovery();"
+
+      - name: Get AKS credentials (primary)
+        run: |
+          az aks get-credentials \
+            --resource-group gitops_rg2345234 \
+            --name example-aks1_test234
+
+      - name: Update db_mode to DR on primary cluster
+        run: |
+          kubectl patch configmap db-config -n prod \
+            --type=merge \
+            -p '{"data":{"db_mode":"DR"}}'
+          kubectl patch configmap db-config -n dev \
+            --type=merge \
+            -p '{"data":{"db_mode":"DR"}}'
+
+      - name: Restart application pods to pick up new config
+        run: |
+          kubectl rollout restart deployment/devops-app -n prod
+          kubectl rollout restart deployment/devops-app -n dev
+          kubectl rollout status deployment/devops-app -n prod --timeout=120s
