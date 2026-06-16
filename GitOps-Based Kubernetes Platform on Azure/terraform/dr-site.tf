@@ -51,7 +51,7 @@ resource "azurerm_kubernetes_cluster" "dr" {
 
 resource "azurerm_role_assignment" "dr_wal" {
   principal_id                     = azurerm_kubernetes_cluster.dr.kubelet_identity[0].object_id
-  role_definition_name             = "Storage Blob Data Reader"
+  role_definition_name             = "Storage Blob Data Contributor"
   scope                            = azurerm_storage_account.wal.id
   skip_service_principal_aad_check = true
 }
