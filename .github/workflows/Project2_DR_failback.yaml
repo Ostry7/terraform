@@ -49,20 +49,11 @@ jobs:
           echo "WAL_PATH=https://$(terraform output -raw wal_storage_account_name).blob.core.windows.net/wal-archive" >> $GITHUB_ENV
 
 
-      - name: Create backup on DR (current primary)
+      - name: Create backup on DR
         run: |
           kubectl --context=aks-dr delete backup cnpg-cluster-backup-ondemand -n prod --ignore-not-found
-          kubectl --context=aks-dr apply -f - <<EOF
-          apiVersion: postgresql.cnpg.io/v1
-          kind: Backup
-          metadata:
-            name: cnpg-cluster-backup-ondemand
-            namespace: prod
-          spec:
-            cluster:
-              name: cnpg-cluster-dr
-            method: barmanObjectStore
-          EOF
+          kubectl --context=aks-dr apply -f \
+            "GitOps-Based Kubernetes Platform on Azure/database/dr/ondemand-backups/cnpg-on-demand-backup.yaml"
           kubectl --context=aks-dr wait --for=jsonpath='{.status.phase}'=completed \
             backup/cnpg-cluster-backup-ondemand \
             -n prod --timeout=300s
