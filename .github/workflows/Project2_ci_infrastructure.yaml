@@ -93,6 +93,10 @@ jobs:
           kubectl wait --for=condition=available --timeout=300s \
             deployment/cnpg-controller-manager -n cnpg-system
 
+      - name: Clean CNPG previous state (PVC reset)
+        run: |
+          kubectl delete pvc cnpg-cluster-primary-1 -n prod --ignore-not-found
+
       - name: Create PostreSQL DB
         run: |
           sed -i "s|<storage_account_path>|https://$(terraform -chdir='GitOps-Based Kubernetes Platform on Azure/terraform/' output -raw wal_storage_account_name).blob.core.windows.net/wal-archive|g" \
