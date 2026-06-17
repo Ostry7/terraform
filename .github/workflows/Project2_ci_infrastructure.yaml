@@ -52,6 +52,11 @@ jobs:
             --name example-aks1_test234 \
             --overwrite-existing
 
+      - name: Terraform Init
+        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
+        run: terraform init
+
+
       - name: Install CloudNativePG
         run: |
           kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.29/releases/cnpg-1.29.1.yaml
