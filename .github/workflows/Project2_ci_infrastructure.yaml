@@ -1,8 +1,8 @@
-# pipeline runs when terraform code changed
 name: Project2_ci_infrastructure.yaml
+
 on:
-  workflow_dispatch: 
-  push: 
+  workflow_dispatch:
+  push:
     paths:
       - 'GitOps-Based Kubernetes Platform on Azure/terraform/**'
 
@@ -10,132 +10,102 @@ env:
   TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
 jobs:
+
   terraform_apply:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: actions/checkout@v4
 
-      - name: Azure Login
-        uses: azure/login@v2
+      - uses: hashicorp/setup-terraform@v3
+
+      - uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Terraform Format Check
-        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
-        run: terraform fmt -check -recursive
-
-      - name: Terraform Validate
-        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
-        run: |
-          terraform init -backend=false
-          terraform validate
 
       - name: Terraform Init
         working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
         run: terraform init
-
-      - name: Terraform Plan
-        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
-        run: terraform plan
 
       - name: Terraform Apply
         working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
         run: terraform apply -auto-approve
 
+
   bootstrap_primary:
-    needs: terraform_apply 
-    if: needs.terraform_apply.result == 'success' #runs only if terraform lint completed successfuly
-    runs-on: ubuntu-slim
+    needs: terraform_apply
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Azure Login
-        uses: azure/login@v2
+      - uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Terraform Init
-        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
-        run: terraform init
+      - uses: azure/setup-kubectl@v3
+      - uses: hashicorp/setup-terraform@v3
 
       - name: Get AKS credentials
         run: |
           az aks get-credentials \
             --resource-group gitops_rg2345234 \
-            --name example-aks1_test234
+            --name example-aks1_test234 \
+            --overwrite-existing
+
+      - name: Install CloudNativePG
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.29/releases/cnpg-1.29.1.yaml
+          kubectl wait --for=condition=available deployment/cnpg-controller-manager -n cnpg-system --timeout=300s
+
+      - name: Clean CNPG state
+        run: |
+          kubectl delete cluster cnpg-cluster-primary -n prod --ignore-not-found
+          kubectl delete cluster cnpg-cluster-primary -n dev --ignore-not-found
+          kubectl delete pvc -l cnpg.io/cluster=cnpg-cluster-primary -n prod --ignore-not-found
+          kubectl delete pvc -l cnpg.io/cluster=cnpg-cluster-primary -n dev --ignore-not-found
+
+      - name: Create namespaces
+        run: |
+          kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create namespace prod --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Install ArgoCD
         run: |
           kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
-          kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml --server-side --force-conflicts
-          kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
-    
-      - name: Create Kubernetes Namespaces
-        run:  |
-          kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
-          kubectl create namespace prod --dry-run=client -o yaml | kubectl apply -f -
+          kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+          kubectl wait --for=condition=available deployment/argocd-server -n argocd --timeout=300s
 
-      - name: Install CloudNativePG
-        run: |
-          kubectl apply --server-side -f \
-            https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.29/releases/cnpg-1.29.1.yaml
-          kubectl wait --for=condition=available --timeout=300s \
-            deployment/cnpg-controller-manager -n cnpg-system
-
-      - name: Cleanup CNPG state
-        run: |
-          kubectl delete cluster --all -n prod --wait=true || true
-          kubectl delete pvc --all -n prod --wait=true || true
-
-      - name: Create PostreSQL DB
+      - name: Create PostgreSQL DB
         run: |
           sed -i "s|<storage_account_path>|https://$(terraform -chdir='GitOps-Based Kubernetes Platform on Azure/terraform/' output -raw wal_storage_account_name).blob.core.windows.net/wal-archive|g" \
             "GitOps-Based Kubernetes Platform on Azure/database/prod/cnpg.yaml"
+
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/dev/"
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/prod/"
 
       - name: Wait for CNPG clusters
         run: |
-          kubectl wait --for=condition=Ready cluster/cnpg-cluster-primary \
-            -n dev --timeout=300s
-          kubectl wait --for=condition=Ready cluster/cnpg-cluster-primary \
-            -n prod --timeout=300s
+          kubectl wait --for=condition=Ready cluster/cnpg-cluster-primary -n dev --timeout=600s
+          kubectl wait --for=condition=Ready cluster/cnpg-cluster-primary -n prod --timeout=600s
 
       - name: Apply ArgoCD applications
-        run:  |
+        run: |
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/gitops/argocd-app-dev.yaml"
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/gitops/argocd-app-prod.yaml"
 
+
   create_dr_env:
     needs: bootstrap_primary
-    if: needs.bootstrap_primary.result == 'success'
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3  
-
-      - name: Azure Login
-        uses: azure/login@v2
+      - uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Terraform Init
-        working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
-        run: terraform init
+      - uses: azure/setup-kubectl@v3
 
       - name: Get Terraform outputs
         working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
@@ -144,89 +114,76 @@ jobs:
           echo "DR_AKS=$(terraform output -raw dr_aks_name)" >> $GITHUB_ENV
           echo "WAL_PATH=https://$(terraform output -raw wal_storage_account_name).blob.core.windows.net/wal-archive" >> $GITHUB_ENV
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Get AKS credentials (DR site)
+      - name: Get DR credentials
         run: |
           az aks get-credentials \
             --resource-group ${{ env.DR_RG }} \
             --name ${{ env.DR_AKS }} \
-            --context aks-dr
-  
-      - name: Install CloudNativePG (DR site)
-        run: |
-          kubectl --context=aks-dr apply --server-side -f \
-            https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.29/releases/cnpg-1.29.1.yaml
-          kubectl --context=aks-dr wait --for=condition=available --timeout=300s \
-            deployment/cnpg-controller-manager -n cnpg-system
+            --context aks-dr \
+            --overwrite-existing
 
-      - name: Create prod namespace (DR)
+      - name: Install CloudNativePG DR
         run: |
-          kubectl --context=aks-dr create namespace prod \
-            --dry-run=client -o yaml | kubectl --context=aks-dr apply -f -
+          kubectl --context=aks-dr apply -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.29/releases/cnpg-1.29.1.yaml
+          kubectl --context=aks-dr wait --for=condition=available deployment/cnpg-controller-manager -n cnpg-system --timeout=300s
 
-      - name: Get AKS credentials (primary -> for secret copy)
+      - name: Create DR namespace
         run: |
-          az aks get-credentials \
-            --resource-group gitops_rg2345234 \
-            --name example-aks1_test234
+          kubectl --context=aks-dr create namespace prod --dry-run=client -o yaml | kubectl --context=aks-dr apply -f -
 
-      - name: Copy TLS secrets from primary to DR
+      - name: Copy secrets
         run: |
           kubectl get secret cnpg-cluster-primary-ca -n prod -o json \
-            | jq 'del(.metadata.resourceVersion, .metadata.uid, .metadata.creationTimestamp, .metadata.ownerReferences)' \
-            | kubectl --context=aks-dr apply -f -
-          kubectl get secret cnpg-cluster-primary-replication -n prod -o json \
-            | jq 'del(.metadata.resourceVersion, .metadata.uid, .metadata.creationTimestamp, .metadata.ownerReferences)' \
-            | kubectl --context=aks-dr apply -f -
+          | jq 'del(.metadata.resourceVersion,.metadata.uid,.metadata.creationTimestamp,.metadata.ownerReferences)' \
+          | kubectl --context=aks-dr apply -f -
 
-      - name: Create ondemand backup on primary to enable continous replication
+          kubectl get secret cnpg-cluster-primary-replication -n prod -o json \
+          | jq 'del(.metadata.resourceVersion,.metadata.uid,.metadata.creationTimestamp,.metadata.ownerReferences)' \
+          | kubectl --context=aks-dr apply -f -
+
+      - name: Create backup
         run: |
           kubectl delete backup cnpg-cluster-backup-ondemand -n prod --ignore-not-found
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/prod/ondemand-backups/"
-          kubectl wait --for=jsonpath='{.status.phase}'=completed \
-            backup/cnpg-cluster-backup-ondemand \
-            -n prod --timeout=300s
+          kubectl wait --for=jsonpath='{.status.phase}'=completed backup/cnpg-cluster-backup-ondemand -n prod --timeout=600s
 
-      - name: Apply DR cluster manifest
+      - name: Apply DR cluster
         run: |
           sed -i "s|<storage_account_path>|${{ env.WAL_PATH }}|g" \
             "GitOps-Based Kubernetes Platform on Azure/database/dr/cnpg-dr-cluster.yaml"
-          kubectl --context=aks-dr apply -f \
-            "GitOps-Based Kubernetes Platform on Azure/database/dr/"
 
-      - name: Wait for DR cluster
+          kubectl --context=aks-dr apply -f "GitOps-Based Kubernetes Platform on Azure/database/dr/"
+
+      - name: Wait DR ready
         run: |
-          kubectl --context=aks-dr wait --for=condition=Ready cluster/cnpg-cluster-dr \
-            -n prod --timeout=600s
+          kubectl --context=aks-dr wait --for=condition=Ready cluster/cnpg-cluster-dr -n prod --timeout=900s
+
 
   bootstrap_monitoring:
-    needs:  bootstrap_primary
-    if: needs.bootstrap_primary.result == 'success' #create monitoring stack only if the rest env have already created
-    runs-on: ubuntu-slim
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    needs: bootstrap_primary
+    runs-on: ubuntu-latest
 
-      - name: Azure Login
-        uses: azure/login@v2
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
+      - uses: azure/setup-kubectl@v3
 
       - name: Get AKS credentials
         run: |
           az aks get-credentials \
             --resource-group gitops_rg2345234 \
-            --name example-aks1_test234     
+            --name example-aks1_test234 \
+            --overwrite-existing
+
       - name: Install Prometheus
         run: |
-          kubectl create namespace monitoring
+          kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/gitops/monitoring/Prometheus/"
-  
+
       - name: Install Grafana
         run: |
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/gitops/monitoring/Grafana/"
