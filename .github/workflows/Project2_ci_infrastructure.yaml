@@ -93,9 +93,10 @@ jobs:
           kubectl wait --for=condition=available --timeout=300s \
             deployment/cnpg-controller-manager -n cnpg-system
 
-      - name: Clean CNPG previous state (PVC reset)
+      - name: Cleanup CNPG state
         run: |
-          kubectl delete pvc cnpg-cluster-primary-1 -n prod --ignore-not-found
+          kubectl delete cluster --all -n prod --wait=true || true
+          kubectl delete pvc --all -n prod --wait=true || true
 
       - name: Create PostreSQL DB
         run: |
