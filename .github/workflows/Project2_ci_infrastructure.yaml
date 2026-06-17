@@ -124,7 +124,7 @@ jobs:
 
       - name: Install CloudNativePG DR
         run: |
-          kubectl --context=aks-dr apply -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.29/releases/cnpg-1.29.1.yaml
+          kubectl --context=aks-dr apply --server-side --force-conflicts -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.29/releases/cnpg-1.29.1.yaml
           kubectl --context=aks-dr wait --for=condition=available deployment/cnpg-controller-manager -n cnpg-system --timeout=300s
 
       - name: Create DR namespace
