@@ -31,6 +31,7 @@ jobs:
       - name: Terraform Validate
         working-directory: "GitOps-Based Kubernetes Platform on Azure/terraform/"
         run: |
+          terraform init -backend=false
           terraform validate
 
       - name: Terraform Init
