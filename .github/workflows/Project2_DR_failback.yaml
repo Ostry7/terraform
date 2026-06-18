@@ -51,6 +51,9 @@ jobs:
         run: |
           echo "WAL_PATH=https://$(terraform output -raw wal_storage_account_name).blob.core.windows.net/wal-archive" >> $GITHUB_ENV
 
+      - name: Debug WAL_PATH
+        run: echo "WAL_PATH is ${{ env.WAL_PATH }}"
+
       - name: Create backup on DR
         run: |
           kubectl --context=aks-dr delete backup cnpg-cluster-backup-ondemand -n prod --ignore-not-found
