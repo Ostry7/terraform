@@ -66,6 +66,19 @@ jobs:
           kubectl delete cluster cnpg-cluster-primary -n prod --ignore-not-found
           kubectl delete pvc cnpg-cluster-primary-1 -n prod --ignore-not-found
 
+      - name: Clean primary WAL archive
+        run: |
+          STORAGE_ACCOUNT=$(terraform -chdir='GitOps-Based Kubernetes Platform on Azure/terraform/' output -raw wal_storage_account_name)
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name $STORAGE_ACCOUNT \
+            --resource-group gitops_rg2345234 \
+            --query "[0].value" -o tsv)
+          az storage blob delete-batch \
+            --account-name $STORAGE_ACCOUNT \
+            --source wal-archive \
+            --pattern "cnpg-cluster-primary/*" \
+            --account-key $STORAGE_KEY
+
       - name: Restore primary from DR backup
         run: |
           sed -i "s|<storage_account_path>|${{ env.WAL_PATH }}|g" \
