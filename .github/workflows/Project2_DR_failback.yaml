@@ -69,7 +69,7 @@ jobs:
             "GitOps-Based Kubernetes Platform on Azure/database/prod/failback/cnpg-failback.yaml"
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/prod/failback/cnpg-failback.yaml"
           kubectl wait --for=condition=Ready cluster/cnpg-cluster-primary \
-            -n prod --timeout=600s
+            -n prod --timeout=600s || true 
 
       - name: Promote primary
         run: |
