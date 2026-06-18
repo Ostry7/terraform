@@ -105,6 +105,8 @@ jobs:
 
       - name: Update db_mode back to PRIMARY
         run: |
+          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/prod/db-configmap.yaml"
+          kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/dev/db-configmap.yaml"
           kubectl patch configmap db-config -n prod \
             --type=merge -p '{"data":{"db_mode":"PRIMARY"}}'
           kubectl patch configmap db-config -n dev \
