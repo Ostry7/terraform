@@ -70,9 +70,9 @@ jobs:
         run: |
           sed -i "s|<storage_account_path>|${{ env.WAL_PATH }}|g" \
             "GitOps-Based Kubernetes Platform on Azure/database/prod/failback/cnpg-failback.yaml"
+          echo "=== After sed ==="
+          grep destinationPath "GitOps-Based Kubernetes Platform on Azure/database/prod/failback/cnpg-failback.yaml"
           kubectl apply -f "GitOps-Based Kubernetes Platform on Azure/database/prod/failback/cnpg-failback.yaml"
-          kubectl wait --for=condition=Ready cluster/cnpg-cluster-primary \
-            -n prod --timeout=600s || true 
 
       - name: Promote primary
         run: |
