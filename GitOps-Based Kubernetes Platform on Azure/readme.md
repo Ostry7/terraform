@@ -1,4 +1,4 @@
-### Project — GitOps-Based Kubernetes Platform on Azure
+## Project — GitOps-Based Kubernetes Platform on Azure
 
 Production-style multi-region disaster recovery platform — containerized application deployed on AKS via GitOps, with failover, WAL-based PostgreSQL replication, and full observability.
 
@@ -180,6 +180,117 @@ verify: pg_is_in_recovery() = false on primary
 ```
 
 The failback manifest (`database/prod/failback/cnpg-failback.yaml`) lives outside the standard ArgoCD sync path — it's applied directly by the pipeline to avoid Argo CD reconciling it away mid-restore.
+
+
+## Database - PostgreSQL with CloudNativePG (CNPG)
+
+### Primary:
+
+- Single-instance CNPG cluster: `cnpg-cluster-primary`
+- `WAL` archiving to Azure Blob Storage with gzip complression
+- Exposed internally via `cnpg-primary-internal-lb` (Service: `LoadBalancer` port `5432`)
+- Schema bootstrapped via `postInitApplicationSQL`:
+  - users table,
+  - products table.
+
+### DR Replica:
+
+- `cnpg-cluster-dr` bootstrapped from `recovery` source pointing at primary
+- streaming replication over VNet peering 
+- `WAL` recovery from the same Azure Blob container as primary
+- on demand backup manifest available under `database/dr/ondemand-backups/`
+
+### CloudNativePG and WAL - How it works?
+
+`WAL` stands for `Write` `Ahead` `Log`. It's core PostgreSQL durability mechanism: before any change reaches the data files, it is first written to the log. If the database crashes mid-operation, PostgreSQL replays the `WAL` on restart - committed transactions are never lost. `WAL` is a physical stream of changes. Every `INSERT`, `UPDATE`, `DELETE` produces `WAL` records. 
+
+### Streaming Replication (Continous replication)
+
+The DR replica connects to primary and says: "give me WAL from position X". Primary responds with a continuous stream of changes — this is streaming replication.
+
+```
+Primary PostgreSQL
+        │
+        │  WAL stream (TCP port 5432, TLS)
+        ▼
+DR Replica PostgreSQL
+  (applies WAL records continuously, stays in recovery mode)
+```
+
+The replica is always in `pg_is_in_recovery() = true` — it's read-only and continuously applying changes from primary. This is how replication lag stays in the milliseconds range under normal conditions.
+
+In this project, the stream travels over VNet Peering between West Europe and Poland Central. The primary is exposed via an internal Azure Load Balancer (`cnpg-primary-internal-lb`) on port `5432` with a static private IP — the DR cluster references that IP directly in externalClusters.
+
+### WAL Archiving to Azure Blob
+
+Streaming replication alone has a problem: if the primary dies before the replica received the latest WAL segments, those changes are gone. WAL archiving solves this.
+
+```
+Primary PostgreSQL
+        │
+        │  completed WAL segment (every 16MB or on timeout)
+        ▼
+Azure Blob Storage (wal-archive container, GRS)
+        │
+        │  WAL restore / catch-up
+        ▼
+DR Replica PostgreSQL
+```
+
+CNPG uses `Barman (Backup and Recovery Manager)` under the hood to handle this. `Barman` is a open-source tool to manage backups and WAL archiving for PostgreSQL. In `CNPG` context `Barman` isn't a separate process. `CNPG` includes a built-in `barman-cloud` library, which is a set of CLI tools from the Barman ecosystem adapted for cloud storage: 
+
+```
+barman-cloud-wal-archive   # sends a WAL segment to S3/Azure Blob/GCS
+barman-cloud-wal-restore   # retrieves the WAL segment from storage
+barman-cloud-backup        # performs a base backup
+barman-cloud-restore       # restores the backup
+```
+
+CNPG invokes these commands inside the PostgreSQL container as hooks—for example, after each WAL segment is closed, PostgreSQL triggers `archive_command`, and CNPG replaces that command with `barman-cloud-wal-archive`, passing the appropriate parameters to Azure Blob.
+
+
+Every completed WAL segment gets shipped to Azure Blob with gzip compression. The DR cluster can recover from Blob even if it was offline for a period and missed streaming WAL — it fetches the archived segments and replays them to catch up.
+
+GRS (Geo-Redundant Storage) means Azure replicates the archive to a paired region automatically, so the archive itself survives a regional outage.
+
+In the CNPG manifest this looks like:
+
+```yaml
+backup:
+  barmanObjectStore:
+    destinationPath: "https://<storage_account>.blob.core.windows.net/wal-archive"
+    azureCredentials:
+      inheritFromAzureAD: true   # uses AKS workload identity, no secrets
+    wal:
+      compression: gzip
+```
+
+### Why WAL Archive must be cleared before failback?
+
+PostgreSQL uses timelines to track the history of a cluster. When a standby is promoted to primary, it starts a new timeline (e.g. timeline 2). All WAL it generates goes into the archive under timeline 2.
+
+If you then try to restore the original primary from the archive without clearing it first, PostgreSQL sees WAL from both timeline 1 (old primary) and timeline 2 (DR after promotion) in the same directory. It gets confused about which history to follow and refuses to start, or worse — silently applies wrong data.
+
+The failback pipeline solves this by deleting all blobs matching cnpg-cluster-primary/* before writing the new restore manifest:
+
+```bash
+az storage blob delete-batch \
+  --account-name $STORAGE_ACCOUNT \
+  --source wal-archive \
+  --pattern "cnpg-cluster-primary/*" \
+  --account-key $STORAGE_KEY
+```
+After the cleanup the restored primary starts fresh on timeline 3 (or whatever is next), with no ambiguity.
+
+### Failover vs Failback - state changes:
+
+|                |          Primary cluster          |            DR cluster            | db_mode ConfigMap |
+|:--------------:|:---------------------------------:|:--------------------------------:|:-----------------:|
+| Normal         |  replica.enabled absent, writable | replica.enabled: true, read-only |      PRIMARY      |
+| After failover |      untouched (assumed down)     | replica.enabled: false, writable |         DR        |
+| After failback | restored from DR backup, writable | replica.enabled: true, read-only |      PRIMARY      |
+
+The `db_mode` ConfigMap value is surfaced in the Flask app UI header (PRIMARY DB / DR) so the current active site is always visible at a glance.
 
 ### TIPS:
 If you're creating new environment after `terraform destroy` we need to refresh the kubeconfig:
