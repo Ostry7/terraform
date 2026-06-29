@@ -1,43 +1,40 @@
 ### Project — GitOps-Based Kubernetes Platform on Azure
 
-A production-style platform that deploys and manages containerized applications on Azure Kubernetes Service using GitOps, with full CI, multi-environment setup, and observability.
+Production-style multi-region disaster recovery platform — containerized application deployed on AKS via GitOps, with failover, WAL-based PostgreSQL replication, and full observability.
 
 Architecture
 ```
 GitHub Repository
         │
-        ├──► GitHub Actions (CI - build & push image)
+        ├──► GitHub Actions (CI — build & push image to ACR)
         │
         ▼
-Argo CD (GitOps)
+Argo CD (GitOps (ArgoCD) — watches repo, syncs cluster state)
         │
         ▼
-AKS (Azure Kubernetes Service)
-        │
-        ├── Helm (application deployment)
-        ├── Namespaces (dev / prod)
+AKS Primary (West Europe)                    AKS DR (Poland Central)
+        │                                            │
+        ├── Helm (dev / prod namespaces)             ├── CNPG DR Cluster (replica)
+        ├── CNPG Primary Cluster                     └── WAL recovery from Azure Blob
+        ├── WAL archive → Azure Blob (GRS)
+        ├── Internal LoadBalancer (5432)
         ├── Prometheus
         └── Grafana
 ```
-Key Features:
 
-- GitOps-based deployment using Argo CD
-- Multi-environment setup (dev, stage, prod) with isolated configurations
-- CI pipeline with GitHub Actions for building and pushing Docker images
-- Infrastructure provisioned with Terraform
-- Application deployment managed via Helm charts
-- Observability stack with Prometheus and Grafana
-- Stateful component using PostgreSQL
+### Tech Stack:
 
-Scope:
+|       Layer       |                          Tools                         |
+|:-----------------:|:------------------------------------------------------:|
+| Infrastructure    | Terraform, Azure (AKS, ACR, VNet, Storage Account GRS) |
+| Container runtime |            Docker, Azure Container Registry            |
+| Orchestration     |                 Kubernetes (AKS), Helm                 |
+| GitOps            |                         Argo CD                        |
+| Database          |            CloudNativePG (CNPG), PostgreSQL            |
+| CI/CD             |                     GitHub Actions                     |
+| Observability     |                   Prometheus, Grafana                  |
+| Application       |                     Python / Flask                     |
 
-- Separation of CI (build) and CD (GitOps-driven deployment)
-- Automated synchronization between Git repository and Kubernetes cluster
-- Self-healing mechanism ensuring cluster state consistency
-- Environment-specific configuration and scaling strategy
-
-Tech Stack
-Azure, Kubernetes (AKS), Docker, Terraform, Helm, Git, GitHub Actions, Argo CD, Prometheus, Grafana, PostgreSQL
 
 ### Prerequisites:
 
@@ -90,7 +87,7 @@ Working Grafana dashboard:
 ### TIPS:
 If you're creating new environment after `terraform destroy` we need to refresh the kubeconfig:
 
-1. Connect local `kubectl` to Azure AKS cluster:
+1. Connect local `kubectl` to Azure AKS cluster (primary - prod site):
 ```bash
 az aks get-credentials \
 --resource-group gitops_rg2345234 \
@@ -105,6 +102,30 @@ az aks update \
   --name example-aks1_test234 \
   --attach-acr gitopscontainerregistry7677
 ```
+
+3. Connect `kubectl` to Azure AKS cluster (DR site):
+```bash
+az aks get-credentials \
+  --resource-group gitops_rg2345234_dr \
+  --name aks-dr-234623465 \
+  --context aks-dr \
+  --overwrite-existing
+```
+
+4. Swtich between k8s contexts:
+```bash
+# context list:
+kubectl config get-contexts
+
+# switch contexts:
+kubectl config use-context <context_name>
+
+# primary context:
+kubectl config use-context example-aks1_test234
+
+# dr context:
+kubectl config use-context aks-dr
+
 
 ### Project2_ci_build:
 
