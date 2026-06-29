@@ -292,48 +292,52 @@ After the cleanup the restored primary starts fresh on timeline 3 (or whatever i
 
 The `db_mode` ConfigMap value is surfaced in the Flask app UI header (PRIMARY DB / DR) so the current active site is always visible at a glance.
 
-### TIPS:
-If you're creating new environment after `terraform destroy` we need to refresh the kubeconfig:
 
-1. Connect local `kubectl` to Azure AKS cluster (primary - prod site):
+## Operations:
+
+### 1. Refresh kubeconfig after `terraform destroy`
 ```bash
+# Primary (prod)
 az aks get-credentials \
---resource-group gitops_rg2345234 \
---name example-aks1_test234 \
---overwrite-existing
-```
+  --resource-group gitops_rg2345234 \
+  --name example-aks1_test234 \
+  --overwrite-existing
 
-2. Connect AKS to ACR:
-```bash
+# Attach ACR
 az aks update \
   --resource-group gitops_rg2345234 \
   --name example-aks1_test234 \
   --attach-acr gitopscontainerregistry7677
-```
 
-3. Connect `kubectl` to Azure AKS cluster (DR site):
-```bash
+# DR site
 az aks get-credentials \
   --resource-group gitops_rg2345234_dr \
   --name aks-dr-234623465 \
   --context aks-dr \
   --overwrite-existing
 ```
+### 2. Switch between contexts
 
-4. Swtich between k8s contexts:
 ```bash
-# context list:
 kubectl config get-contexts
+kubectl config use-context example-aks1_test234   # primary
+kubectl config use-context aks-dr                  # DR
+```
 
-# switch contexts:
-kubectl config use-context <context_name>
+### 3. Expose ArgoCD UI:
 
-# primary context:
-kubectl config use-context example-aks1_test234
+```bash
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath="{.data.password}" | base64 -d
+```
 
-# dr context:
-kubectl config use-context aks-dr
+### 4. Check active image per namespace:
 
+```bash
+echo "DEV:" && kubectl describe pod -n dev | grep "Image:"
+echo "PROD:" && kubectl describe pod -n prod | grep "Image:"
+```
 
 ### Project2_ci_build:
 
@@ -356,30 +360,3 @@ kubectl describe pod -n dev | grep "Image:"
 echo "PROD:"
 kubectl describe pod -n prod | grep "Image:"
 ```
-
-If a change is applied to the `dev` environment, the `Project2_cd_prod_deploy.yaml` workflow is triggered. In GitHub, we have configured an environment (based on the main branch) where the pipeline pauses and waits for manual approval before proceeding with the production deployment. Once the change is approved, the image tag from the `dev` environment is also updated in the prod Helm values file. ArgoCD then detects the difference between the desired and actual state, updates the Kubernetes manifests with the new tag, and Kubernetes pulls the corresponding image.
-![alt text](image-1.png)
-
-
-### Prepare fake data (fake inserts)
-
-Ino `psql-configmap.yaml` we've got some fake generated inserts:
-```yaml
-[...]
- fake_insert.sql: |
-    INSERT INTO products (name, price, category)
-    SELECT
-      t.name || ' ' || i,
-      round((t.base_price + random() * t.variance)::numeric, 2),
-      t.category
-    FROM generate_series(1, 500) i
-[...]
-```
-It'll be mounted into `psql-db-0` pod under `/sql` directory. To insert some fake data do the following:
-```yaml
-# connect into pod:
-kubectl exec -it psql-db-0 -n prod -- /bin/bash 
-
-# run psql statement:
-sql -U looser -d devspace -f /sql/fake_insert.sql
- ```
